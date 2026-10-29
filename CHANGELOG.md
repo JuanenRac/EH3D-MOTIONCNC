@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A lighter debug build:** the `dev` profile keeps the file and line of a panic (`debug = "line-tables-only"`) but not the full debug symbols, so the `target` folder of a test run is about a tenth of its size.
 - Repository scaffolding: the README in eight languages with the project status table, the Architecture and Repository Structure pictures drawn from `docs/architecture.json` and `docs/structure.json`, the CI workflow, the issue and pull-request templates, the code of conduct, the contributing guide, the security policy, the support page and the repository checks in `tools/`.
 - The manifest says what the repository is today: a library with no tests of its own, no window and no machine control.
 - The view of a job (the scene, the themes and the words of the interface) moved to `eh3d-view` of EH3D-COMMON, where every program of the suite can use it; this crate uses it from there.

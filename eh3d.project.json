@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "EH3D",
+  "name": "EH3D-MOTIONCNC",
+  "version": "0.0.1",
+  "role": "ui",
+  "stack": "rust",
+  "technologies": [
+    "Rust",
+    "egui / eframe"
+  ],
+  "deployment_target": "user-pc",
+  "maturity": "scaffolding",
+  "evidence": "host-test",
+  "family": "CNC Workflow Tools",
+  "parent": null,
+  "build": "cargo build --release; cargo test",
+  "notes": "Scaffolding v0.0.1: the shared base of the EH3D machine-control programs. So far a Rust library with the scene of a job on the work table (holes by drill size, routing paths, progress, drilling and routing jobs on top of each other, the plan view and the isometric view of the machine fitted to the table size of the configuration, and a check for what does not fit on the table), the themes of the modern interface (four made ones and one that follows the colours of Windows, plus the user's own) and the words of the interface in eight languages. There is no window and no machine control yet.",
+  "native_version": {
+    "file": "Cargo.toml",
+    "pattern": "^version\s*=\s*\"(\d+\.\d+\.\d+)\""
+  }
+}

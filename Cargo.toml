@@ -1,0 +1,10 @@
+[package]
+name = "eh3d-motioncnc"
+version = "0.0.1"
+edition = "2021"
+description = "The shared 2D and 3D view, the themes and the machine model for the EH3D machine-control programs"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/JuanenRac/EH3D-MOTIONCNC"
+readme = "README.md"
+
+[dependencies]

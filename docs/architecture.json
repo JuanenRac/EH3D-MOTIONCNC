@@ -1,0 +1,135 @@
+{
+  "repo": "EH3D-MOTIONCNC",
+  "ecosystem": "eh3d",
+  "tagline": "The base of the future EH3D machine-control program: today the view of a job, shared.",
+  "description": "EH3D-MOTIONCNC will be the machine-control program of EH3D for drilling, routing and 2D and 3D CNC work. Today it is only a Rust library that re-exports the scene, the themes and the texts of eh3d-view of EH3D-COMMON; the window, the machine control, the ZIP of jobs and the engines of EH3D-DRILLPRO and EH3D-ROUTEPRO are still to be joined.",
+  "columns": [
+    "WHO WILL USE IT",
+    "THIS REPOSITORY",
+    "WHAT IT RELIES ON"
+  ],
+  "nodes": [
+    {
+      "id": "op",
+      "column": 0,
+      "level": "external",
+      "title": "The operator",
+      "lines": [
+        "will work in a window with",
+        "jog, G-code, drilling, routing",
+        "and 2D and 3D views (future)"
+      ]
+    },
+    {
+      "id": "eng",
+      "column": 0,
+      "level": "external",
+      "title": "Drilling, routing",
+      "lines": [
+        "EH3D-DRILLPRO and ROUTEPRO",
+        "to be joined later (future);",
+        "nothing is joined today"
+      ]
+    },
+    {
+      "id": "lib",
+      "column": 1,
+      "level": "tested",
+      "title": "The base library",
+      "lines": [
+        "re-exports scene, texts and",
+        "theme under this program's name;",
+        "no code of its own yet"
+      ],
+      "code": [
+        "src/lib.rs::pub use eh3d_view"
+      ]
+    },
+    {
+      "id": "win",
+      "column": 1,
+      "level": "untested",
+      "title": "Control window",
+      "lines": [
+        "jog, G-code, drilling, routing,",
+        "2D and 3D (future)",
+        "not started"
+      ]
+    },
+    {
+      "id": "view",
+      "column": 2,
+      "level": "external",
+      "title": "eh3d-view",
+      "lines": [
+        "scene, plan and isometric views,",
+        "five themes, texts in eight",
+        "languages (EH3D-COMMON)"
+      ]
+    },
+    {
+      "id": "zip",
+      "column": 2,
+      "level": "external",
+      "title": "eh3d-archive",
+      "lines": [
+        "ZIP of jobs in EH3D-COMMON;",
+        "not used here yet (future)"
+      ]
+    },
+    {
+      "id": "mach",
+      "column": 2,
+      "level": "untested",
+      "title": "The machine",
+      "lines": [
+        "no connection to any machine;",
+        "nothing has run on one"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "op",
+      "to": "win",
+      "label": "future",
+      "level": "untested"
+    },
+    {
+      "from": "eng",
+      "to": "win",
+      "label": "future",
+      "level": "untested"
+    },
+    {
+      "from": "win",
+      "to": "lib",
+      "level": "untested"
+    },
+    {
+      "from": "lib",
+      "to": "view",
+      "label": "re-export",
+      "level": "tested"
+    },
+    {
+      "from": "win",
+      "to": "zip",
+      "label": "future",
+      "level": "untested"
+    },
+    {
+      "from": "win",
+      "to": "mach",
+      "label": "future",
+      "level": "untested"
+    }
+  ],
+  "legend": {
+    "tested": "real today; the view is tested in EH3D-COMMON",
+    "config": "chosen in a file; not tried for real",
+    "untested": "future: not written yet",
+    "external": "a person or another repository"
+  },
+  "footer": "There is no window and no machine control yet."
+}

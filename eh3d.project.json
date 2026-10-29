@@ -3,11 +3,10 @@
   "ecosystem": "EH3D",
   "name": "EH3D-MOTIONCNC",
   "version": "0.0.1",
-  "role": "ui",
+  "role": "library",
   "stack": "rust",
   "technologies": [
-    "Rust",
-    "egui / eframe"
+    "Rust"
   ],
   "deployment_target": "user-pc",
   "maturity": "scaffolding",
@@ -15,9 +14,9 @@
   "family": "CNC Workflow Tools",
   "parent": null,
   "build": "cargo build --release; cargo test",
-  "notes": "Scaffolding v0.0.1: the shared base of the EH3D machine-control programs. So far a Rust library with the scene of a job on the work table (holes by drill size, routing paths, progress, drilling and routing jobs on top of each other, the plan view and the isometric view of the machine fitted to the table size of the configuration, and a check for what does not fit on the table), the themes of the modern interface (four made ones and one that follows the colours of Windows, plus the user's own) and the words of the interface in eight languages. There is no window and no machine control yet.",
+  "notes": "Scaffolding v0.0.1: the shared base of the future EH3D machine-control program (drilling, routing and 2D and 3D CNC work). So far a Rust library that re-exports the view of a job from eh3d-view of EH3D-COMMON (a sibling folder is needed): the scene of a job on the work table, the plan and isometric views, a check for what does not fit on the table, five themes and the words of the interface in eight languages. It has no tests of its own (the view is tested in EH3D-COMMON). There is no window and no machine control yet, and nothing here has run on a machine.",
   "native_version": {
     "file": "Cargo.toml",
-    "pattern": "^version\s*=\s*\"(\d+\.\d+\.\d+)\""
+    "pattern": "^version\\s*=\\s*\"(\\d+\\.\\d+\\.\\d+)\""
   }
 }

@@ -2,9 +2,10 @@
 name = "eh3d-motioncnc"
 version = "0.0.1"
 edition = "2021"
-description = "The shared 2D and 3D view, the themes and the machine model for the EH3D machine-control programs"
+description = "The EH3D machine-control program: drilling, routing and 2D and 3D CNC work (the view of a job so far)"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/JuanenRac/EH3D-MOTIONCNC"
 readme = "README.md"
 
 [dependencies]
+eh3d-view = { path = "../EH3D-COMMON/crates/view" }

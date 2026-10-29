@@ -1,7 +1,5 @@
-//! The part of EH3D-MOTIONCNC that the drilling and the routing programs share: what a job looks like on the table (the 2D view with
-//! every hole by drill size, the paths, the progress, and the 3D view of the machine with the table of the chosen size), the themes of
-//! the modern interface and the names of everything in the eight languages.
+//! The base of the EH3D machine-control program that will hold the drilling mode, the routing mode and the 2D and 3D CNC work. For now it
+//! is the view of a job (the scene on the table, the themes and the words of the interface), which lives in `eh3d-view` of EH3D-COMMON
+//! and is shared with the other programs of the suite; it is re-exported here so that this program uses it under its own name.
 
-pub mod scene;
-pub mod texts;
-pub mod theme;
+pub use eh3d_view::{scene, texts, theme};

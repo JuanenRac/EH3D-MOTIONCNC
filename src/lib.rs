@@ -3,3 +3,9 @@
 //! and is shared with the other programs of the suite; it is re-exported here so that this program uses it under its own name.
 
 pub use eh3d_view::{scene, texts, theme};
+
+pub mod cli;
+pub mod gcode;
+#[cfg(feature = "gui")]
+pub mod gui;
+pub mod session;

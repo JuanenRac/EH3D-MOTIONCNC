@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.0.4] - A serial link to GRBL, menus and a left panel like PlanetCNC, and a window that follows the screen
+
+- **The window opens maximized and follows the size of the screen:** from 720p to 1080p and on to larger and wider screens everything grows or shrinks with the window.
 - **GRBL on a serial port:** with `--features serial`, `--grbl PORT[@BAUD]` drives a GRBL controller instead of the simulator and `--ports` lists the serial ports; a build without the feature or a port that does not open says so and leaves.
 - **Menus, settings and files like PlanetCNC:** the menus File, View, Program, Machine and Help (open, recent files, save, edit the program, the zeros, the stored positions, the spindle and the coolant, what is shown, About); a settings window with its sections (units, language and the eleven themes, travel limits, jog) kept between runs, whose travel limits reach the machine; the Open and Save windows of the suite (`eh3d-filedialog`) with the places, the sorting, the filters, the recent files, the extension of a saved file and the question before a file is replaced; an editor of the program; the position in inches when the settings say so; 22 tests.
 - **The left panel made like the one of PlanetCNC:** a column of buttons (set the work zero in XYZ or in XY, go to the stored positions G28 and G30, go to the zero in XY or in Z, home), the position with the tabs Work, Machine, Operator and GCode and the four axes X, Y, Z and A (the letter of an axis sets its zero), the speed and the spindle, the active G-codes and M-codes or the inputs and outputs, and the jog with the A axis; the session keeps the codes in force, the zero of the operator and the stored positions (tested).

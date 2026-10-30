@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-22-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-25-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Ehrlichkeitscheck - was heute tatsächlich läuft:** ein Rust-Programm mit einem Fenster (`motioncnc`), das eine **simulierte** Maschine steuert: es zeigt die Position der Maschine (Werkstück und Maschine), fährt sie von Hand mit einem Jog-Feld, setzt den Nullpunkt, fährt die Referenz an, nimmt die vom Bediener getippten Befehle an, führt ein G-Code-Programm Zeile für Zeile aus (mit Pause, Stopp und Not-Halt), zeichnet die Bahn des Programms auf den Tisch mit den erledigten Zeilen markiert und hält an, was die Steuerung ablehnt. Das Fenster spricht acht Sprachen und trägt fünf Themen. Die Steuerungsschnittstelle (`eh3d-controller`, in EH3D-COMMON) hat GRBL gegen eine geskriptete Leitung geschrieben und führt die übrigen Familien als noch nicht angesteuert. 22 Tests laufen auf einem Rechner. **Nichts davon lief auf einer echten Maschine**, es wird weder eine serielle Schnittstelle noch eine Netzverbindung geöffnet, und Bögen und die übrigen Codes werden vom Simulator weder gezeichnet noch ausgeführt.
+**Ehrlichkeitscheck - was heute tatsächlich läuft:** ein Rust-Programm mit einem Fenster (`motioncnc`), das eine **simulierte** Maschine steuert: es zeigt die Position der Maschine (Werkstück und Maschine), fährt sie von Hand mit einem Jog-Feld, setzt den Nullpunkt, fährt die Referenz an, nimmt die vom Bediener getippten Befehle an, führt ein G-Code-Programm Zeile für Zeile aus (mit Pause, Stopp und Not-Halt), zeichnet die Bahn des Programms auf den Tisch mit den erledigten Zeilen markiert und hält an, was die Steuerung ablehnt. Das Fenster spricht acht Sprachen und trägt fünf Themen. Die Steuerungsschnittstelle (`eh3d-controller`, in EH3D-COMMON) hat GRBL gegen eine geskriptete Leitung geschrieben und führt die übrigen Familien als noch nicht angesteuert. 25 Tests laufen auf einem Rechner. **Nichts davon lief auf einer echten Maschine**, es wird weder eine serielle Schnittstelle noch eine Netzverbindung geöffnet, und Bögen und die übrigen Codes werden vom Simulator weder gezeichnet noch ausgeführt.
 
 ---
 
@@ -29,9 +29,9 @@
 
 | | |
 |---|---|
-| Version | `0.0.3` |
+| Version | `0.0.4` |
 | Reifegrad | Gerüst |
-| Tests | 22 |
+| Tests | 25 |
 | Technologie-Stack | Rust |
 | Auf echter Hardware | Nein: es steuert nur eine simulierte Maschine |
 
@@ -48,7 +48,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel zeigt, wie weit er heu
 | Basis-Bibliothek | 🟡 | Ein Rust-Crate, das `scene`, `texts` und `theme` aus `eh3d-view` unter dem Namen dieses Programms erneut exportiert; es braucht den Ordner von EH3D-COMMON daneben. |
 | Szene und Ansichten | 🟡 | In EH3D-COMMON geschrieben und getestet; das Fenster dieses Programms zeichnet die Bahn eines Programms auf den Tisch und die Position des Werkzeugs (auf einem Rechner gesehen). |
 | Themen und Texte | 🟡 | Fünf Themen und die Wörter der Oberfläche in acht Sprachen, im Fenster dieses Programms gesehen. |
-| Tests | 🟡 | 22 Tests bestehen auf einem Rechner (`cargo test --features gui`): die Sitzung (Jog, Nullpunkt, Referenz, ein Programm, Pause, Alarm, Not-Halt), die Bahn eines Programms und die Befehlszeile; die simulierte Steuerung wird in EH3D-COMMON getestet. |
+| Tests | 🟡 | 25 Tests bestehen auf einem Rechner (`cargo test --features gui`): die Sitzung (Jog, Nullpunkt, Referenz, ein Programm, Pause, Alarm, Not-Halt), die Bahn eines Programms und die Befehlszeile; die simulierte Steuerung wird in EH3D-COMMON getestet. |
 | Fenster und Jog | 🟡 | Läuft auf einem Rechner mit der simulierten Steuerung: Position, Jog-Feld, Schritte, Vorschub, Referenz, Nullpunkt, Entsperren, eine Befehlszeile und ein Protokoll; keine echte Maschine. |
 | Maschinensteuerung | 🟠 | Nur der Simulator: ein Programm läuft Zeile für Zeile mit Pause, Stopp und Not-Halt; von hier ist noch keine echte Steuerung angeschlossen. |
 | Dokumentation | 🟡 | README in acht Sprachen, die beiden Bilder, drei Beispielprogramme und das Changelog. |
@@ -62,6 +62,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel zeigt, wie weit er heu
 * Die **Themen und Wörter** von `eh3d-view`: Forge (Standard), Neon Arcade, Glass Pro, das klassische Windows-Grau und eines, das Windows folgt, und die Oberfläche auf Englisch, Spanisch, Italienisch, Deutsch, Französisch, Portugiesisch, Chinesisch und Japanisch. Was es werden soll: ein Programm zum Bohren, Fräsen und für 2D- und 3D-CNC auf den Engines von EH3D-DRILLPRO und EH3D-ROUTEPRO; dieser Teil existiert noch nicht.
 * Die **Menüs, die Einstellungen und die Dateien**: die Menüs Datei, Ansicht, Programm, Maschine und Hilfe mit dem, was PlanetCNC darin hat (öffnen, zuletzt geöffnet, speichern, bearbeiten, die Nullpunkte, die gespeicherten Positionen, die Spindel und das Kühlmittel); ein Einstellungsfenster (Einheiten, Sprache, elf Themen, Verfahrgrenzen, Jog), das zwischen den Läufen gemerkt wird; und die Fenster Öffnen und Speichern der Suite (`eh3d-filedialog`: Orte, Sortierung, Filter, die Endung einer gespeicherten Datei und die Frage vor dem Ersetzen).
 * **GRBL an einer seriellen Schnittstelle:** mit `--features serial` gebaut, steuert `motioncnc --grbl PORT[@BAUD]` einen GRBL-Controller (standardmäßig 115200 Baud) statt des Simulators, und `motioncnc --ports` listet die seriellen Ports; ein Build ohne das Feature oder ein Port, der sich nicht öffnet, sagt es und beendet sich. Nur gegen einen skriptgesteuerten Controller erprobt, nie gegen einen echten.
+* **Ein Fenster, das dem Bildschirm folgt:** es öffnet sich maximiert, und von 720p über 1080p bis zu größeren und breiteren Bildschirmen wächst oder schrumpft alles mit.
 
 ## 🧩 Rolle in EH3D
 
@@ -128,7 +129,7 @@ cargo run --release --features gui -- examples/02_frame_and_pocket.nc
 
 ## 🧪 Tests
 
-`cargo test --features gui` führt 12 Tests aus: die Sitzung (Jog und Nullpunkt, ein Programm Zeile für Zeile, Pause und Weiter, eine abgelehnte Zeile, der Not-Halt und der Alarm, das Protokoll der Befehle, die Referenz), die Bahn eines Programms und die Befehlszeile; die Ansicht und die simulierte Steuerung werden in EH3D-COMMON getestet. Die CI führt außerdem `cargo fmt --check` und `cargo clippy` mit Warnungen als Fehlern aus, und `python -I tools/ci_validate.py` prüft Manifest, Versionen, Changelog und die acht READMEs.
+`cargo test --features gui` führt 25 Tests aus: die Sitzung (Jog und Nullpunkt, ein Programm Zeile für Zeile, Pause und Weiter, eine abgelehnte Zeile, der Not-Halt und der Alarm, das Protokoll der Befehle, die Referenz), die Bahn eines Programms und die Befehlszeile; die Ansicht und die simulierte Steuerung werden in EH3D-COMMON getestet. Die CI führt außerdem `cargo fmt --check` und `cargo clippy` mit Warnungen als Fehlern aus, und `python -I tools/ci_validate.py` prüft Manifest, Versionen, Changelog und die acht READMEs.
 
 ## 🏗️ Build und Veröffentlichung
 

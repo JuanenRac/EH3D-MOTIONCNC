@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-22-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-25-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Verifica di onestà - cosa funziona oggi:** un programma Rust con una finestra (`motioncnc`) che pilota una macchina **simulata**: mostra la posizione della macchina (pezzo e macchina), la sposta a mano con un tastierino di jog, imposta lo zero, esegue l'origine, accetta i comandi digitati dall'operatore, esegue un programma G-code riga per riga (con pausa, stop e arresto di emergenza), disegna il percorso del programma sul piano con le righe eseguite segnate e si ferma su ciò che il controllore rifiuta. La finestra parla otto lingue e porta cinque temi. L'interfaccia dei controllori (`eh3d-controller`, in EH3D-COMMON) ha GRBL scritto contro una linea simulata ed elenca le altre famiglie come non ancora pilotate. 22 test girano su un computer. **Nulla di qui è stato eseguito su una macchina reale**, non si apre alcuna porta seriale né connessione di rete, e gli archi e gli altri codici il simulatore non li disegna né li esegue.
+**Verifica di onestà - cosa funziona oggi:** un programma Rust con una finestra (`motioncnc`) che pilota una macchina **simulata**: mostra la posizione della macchina (pezzo e macchina), la sposta a mano con un tastierino di jog, imposta lo zero, esegue l'origine, accetta i comandi digitati dall'operatore, esegue un programma G-code riga per riga (con pausa, stop e arresto di emergenza), disegna il percorso del programma sul piano con le righe eseguite segnate e si ferma su ciò che il controllore rifiuta. La finestra parla otto lingue e porta cinque temi. L'interfaccia dei controllori (`eh3d-controller`, in EH3D-COMMON) ha GRBL scritto contro una linea simulata ed elenca le altre famiglie come non ancora pilotate. 25 test girano su un computer. **Nulla di qui è stato eseguito su una macchina reale**, non si apre alcuna porta seriale né connessione di rete, e gli archi e gli altri codici il simulatore non li disegna né li esegue.
 
 ---
 
@@ -29,9 +29,9 @@
 
 | | |
 |---|---|
-| Versione | `0.0.3` |
+| Versione | `0.0.4` |
 | Maturità | Impalcatura |
-| Test | 22 |
+| Test | 25 |
 | Stack tecnologico | Rust |
 | Su hardware reale | No: pilota solo una macchina simulata |
 
@@ -48,7 +48,7 @@ Ogni riga è una parte di questo repository e la luce dice a che punto è oggi. 
 | Libreria di base | 🟡 | Un crate Rust che riesporta `scene`, `texts` e `theme` di `eh3d-view` con il nome di questo programma; richiede la cartella di EH3D-COMMON accanto. |
 | Scena e viste | 🟡 | Scritta e provata in EH3D-COMMON; la finestra di questo programma disegna il percorso di un programma sul piano e la posizione dell'utensile (vista su un computer). |
 | Temi e testi | 🟡 | Cinque temi e le parole dell'interfaccia in otto lingue, viste nella finestra di questo programma. |
-| Test | 🟡 | 22 test passano su un computer (`cargo test --features gui`): la sessione (jog, zero, origine, un programma, pausa, allarme, arresto di emergenza), il percorso di un programma e la riga di comando; il controllore simulato è provato in EH3D-COMMON. |
+| Test | 🟡 | 25 test passano su un computer (`cargo test --features gui`): la sessione (jog, zero, origine, un programma, pausa, allarme, arresto di emergenza), il percorso di un programma e la riga di comando; il controllore simulato è provato in EH3D-COMMON. |
 | Finestra e jog | 🟡 | Funziona su un computer con il controllore simulato: posizione, tastierino di jog, passi, avanzamento, origine, zero, sblocco, una riga di comandi e un registro; nessuna macchina reale. |
 | Controllo della macchina | 🟠 | Solo il simulatore: un programma gira riga per riga con pausa, stop e arresto di emergenza; da qui non è ancora collegato alcun controllore reale. |
 | Documentazione | 🟡 | README in otto lingue, le due immagini, tre programmi di esempio e il changelog. |
@@ -62,6 +62,7 @@ Ogni riga è una parte di questo repository e la luce dice a che punto è oggi. 
 * I **temi e le parole** di `eh3d-view`: Forge (predefinito), Neon Arcade, Glass Pro, il grigio classico di Windows e uno che segue Windows, e l'interfaccia in inglese, spagnolo, italiano, tedesco, francese, portoghese, cinese e giapponese. Cosa sarà: un programma per forare, fresare e fare CNC 2D e 3D sui motori di EH3D-DRILLPRO ed EH3D-ROUTEPRO; quella parte non esiste ancora.
 * I **menu, le impostazioni e i file**: i menu File, Visualizza, Programma, Macchina e Aiuto con ciò che ha PlanetCNC (apri, recenti, salva, modifica, gli zeri, le posizioni memorizzate, il mandrino e il refrigerante); una finestra di impostazioni (unità, lingua, undici temi, limiti di corsa, jog) che si ricorda tra le esecuzioni; e le finestre Apri e Salva della suite (`eh3d-filedialog`: luoghi, ordinamento, filtri, l'estensione di un file salvato e la domanda prima di sostituire).
 * **GRBL su una porta seriale:** compilato con `--features serial`, `motioncnc --grbl PORTA[@BAUD]` comanda un controller GRBL (115200 baud di default) al posto del simulatore e `motioncnc --ports` elenca le porte seriali; una build senza la funzione, o una porta che non si apre, lo dice ed esce. Provato solo contro un controller scriptato, mai contro uno reale.
+* **Una finestra che segue lo schermo:** si apre massimizzata e, da 720p a 1080p e fino a schermi più grandi e larghi, tutto cresce o si riduce con essa.
 
 ## 🧩 Ruolo in EH3D
 
@@ -128,7 +129,7 @@ cargo run --release --features gui -- examples/02_frame_and_pocket.nc
 
 ## 🧪 Test
 
-`cargo test --features gui` esegue 12 test: la sessione (jog e zero, un programma riga per riga, pausa e ripresa, una riga rifiutata, l'arresto di emergenza e l'allarme, il registro dei comandi, l'origine), il percorso di un programma e la riga di comando; la vista e il controllore simulato sono provati in EH3D-COMMON. La CI esegue anche `cargo fmt --check` e `cargo clippy` con gli avvisi come errori, e `python -I tools/ci_validate.py` controlla manifesto, versioni, changelog e gli otto README.
+`cargo test --features gui` esegue 25 test: la sessione (jog e zero, un programma riga per riga, pausa e ripresa, una riga rifiutata, l'arresto di emergenza e l'allarme, il registro dei comandi, l'origine), il percorso di un programma e la riga di comando; la vista e il controllore simulato sono provati in EH3D-COMMON. La CI esegue anche `cargo fmt --check` e `cargo clippy` con gli avvisi come errori, e `python -I tools/ci_validate.py` controlla manifesto, versioni, changelog e gli otto README.
 
 ## 🏗️ Compilazione e rilascio
 

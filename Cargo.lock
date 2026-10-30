@@ -613,7 +613,7 @@ dependencies = [
 
 [[package]]
 name = "eh3d-common"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "chrono",
  "semver",
@@ -638,7 +638,7 @@ version = "0.0.1"
 
 [[package]]
 name = "eh3d-motioncnc"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "eframe",
  "eh3d-controller",

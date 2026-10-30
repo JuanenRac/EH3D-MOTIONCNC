@@ -12,14 +12,14 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-22-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-25-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**诚实性检查 - 今天实际能运行的内容：**一个带窗口的 Rust 程序（`motioncnc`），驱动一台**模拟**机床：显示机床位置（工件和机床坐标），用点动面板手动移动，设置零点，回零，接收操作员输入的命令，逐行运行 G 代码程序（可暂停、停止和急停），在工作台上画出程序路径并标出已完成的行，并在控制器拒绝处停下。窗口支持八种语言和五种主题。控制器接口（`eh3d-controller`，在 EH3D-COMMON 中）针对脚本化的线路编写了 GRBL，其余系列列为尚未支持。22 个测试在计算机上运行。**这里没有任何内容在真实机床上运行过**，不打开串口或网络连接，模拟器既不绘制也不执行圆弧和其他代码。
+**诚实性检查 - 今天实际能运行的内容：**一个带窗口的 Rust 程序（`motioncnc`），驱动一台**模拟**机床：显示机床位置（工件和机床坐标），用点动面板手动移动，设置零点，回零，接收操作员输入的命令，逐行运行 G 代码程序（可暂停、停止和急停），在工作台上画出程序路径并标出已完成的行，并在控制器拒绝处停下。窗口支持八种语言和五种主题。控制器接口（`eh3d-controller`，在 EH3D-COMMON 中）针对脚本化的线路编写了 GRBL，其余系列列为尚未支持。25 个测试在计算机上运行。**这里没有任何内容在真实机床上运行过**，不打开串口或网络连接，模拟器既不绘制也不执行圆弧和其他代码。
 
 ---
 
@@ -29,9 +29,9 @@
 
 | | |
 |---|---|
-| 版本 | `0.0.3` |
+| 版本 | `0.0.4` |
 | 成熟度 | 脚手架 |
-| 测试 | 22 |
+| 测试 | 25 |
 | 技术栈 | Rust |
 | 真实硬件 | 否：只驱动模拟机床 |
 
@@ -48,7 +48,7 @@
 | 基础库 | 🟡 | 一个 Rust crate，以本程序的名称重新导出 `eh3d-view` 的 `scene`、`texts` 和 `theme`；需要旁边有 EH3D-COMMON 文件夹。 |
 | 场景与视图 | 🟡 | 在 EH3D-COMMON 中编写并测试；本程序的窗口在工作台上绘制程序路径和刀具位置（已在电脑上看过）。 |
 | 主题与文本 | 🟡 | 五种主题和八种语言的界面文字，已在本程序的窗口中看过。 |
-| 测试 | 🟡 | 电脑上通过 22 个测试（`cargo test --features gui`）：会话（点动、零点、回零、程序、暂停、报警、急停）、程序路径和命令行；模拟控制器在 EH3D-COMMON 中测试。 |
+| 测试 | 🟡 | 电脑上通过 25 个测试（`cargo test --features gui`）：会话（点动、零点、回零、程序、暂停、报警、急停）、程序路径和命令行；模拟控制器在 EH3D-COMMON 中测试。 |
 | 窗口与点动 | 🟡 | 在电脑上配合模拟控制器运行：位置、点动面板、步长、进给、回零、清零、解锁、命令行和日志；没有真实机床。 |
 | 机床控制 | 🟠 | 只有模拟器：程序逐行运行，可暂停、停止和急停；这里还没有连接任何真实控制器。 |
 | 文档 | 🟡 | 八种语言的 README、两张图片、三个示例程序和更新日志。 |
@@ -62,6 +62,7 @@
 * `eh3d-view` 的**主题和文字**：Forge（默认）、Neon Arcade、Glass Pro、经典 Windows 灰色和一个跟随 Windows 的主题，以及英语、西班牙语、意大利语、德语、法语、葡萄牙语、中文和日语界面。它将成为：基于 EH3D-DRILLPRO 和 EH3D-ROUTEPRO 引擎的、用于钻孔、铣削以及 2D 和 3D CNC 加工的一个程序；这部分尚不存在。
 * **菜单、设置和文件**：文件、视图、程序、机床和帮助菜单，包含 PlanetCNC 中有的功能（打开、最近文件、保存、编辑、各零点、已存位置、主轴和冷却液）；两次运行之间会记住的设置窗口（单位、语言、十一种主题、行程限位、点动）；以及套件共用的打开和保存窗口（`eh3d-filedialog`：位置、排序、过滤、保存文件的扩展名和替换前的询问）。
 * **串口上的 GRBL：** 使用 `--features serial` 构建后，`motioncnc --grbl 端口[@波特率]` 驱动 GRBL 控制器（默认 115200 波特）而不是模拟器，`motioncnc --ports` 列出串口；没有该功能的构建或打不开的端口会给出提示并退出。只对脚本化的控制器试过，从未对真实控制器试过。
+* **随屏幕变化的窗口：** 窗口以最大化打开，从 720p 到 1080p 乃至更大更宽的屏幕，所有内容随之放大或缩小。
 
 ## 🧩 在 EH3D 中的角色
 
@@ -128,7 +129,7 @@ cargo run --release --features gui -- examples/02_frame_and_pocket.nc
 
 ## 🧪 测试
 
-`cargo test --features gui` 运行 12 个测试：会话（点动和清零、逐行运行程序、暂停和继续、被拒绝的行、急停和报警、命令日志、回零）、程序路径和命令行；视图和模拟控制器在 EH3D-COMMON 中测试。CI 还会运行 `cargo fmt --check` 和把警告当作错误的 `cargo clippy`，`python -I tools/ci_validate.py` 检查清单、版本、更新日志和八个 README。
+`cargo test --features gui` 运行 25 个测试：会话（点动和清零、逐行运行程序、暂停和继续、被拒绝的行、急停和报警、命令日志、回零）、程序路径和命令行；视图和模拟控制器在 EH3D-COMMON 中测试。CI 还会运行 `cargo fmt --check` 和把警告当作错误的 `cargo clippy`，`python -I tools/ci_validate.py` 检查清单、版本、更新日志和八个 README。
 
 ## 🏗️ 构建与发布
 

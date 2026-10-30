@@ -94,6 +94,9 @@ mod tests {
             grbl: Some("COM3".into()),
             ..Default::default()
         };
-        assert!(controller_for(&o).unwrap_err().contains("serial"));
+        match controller_for(&o) {
+            Err(e) => assert!(e.contains("serial")),
+            Ok(_) => panic!("a build without serial opened a port"),
+        }
     }
 }

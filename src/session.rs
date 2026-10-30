@@ -148,6 +148,47 @@ impl Session {
         o
     }
 
+    /// Tells the controller the limits of the travel of X, Y and Z (mm); the other axes are left as they are. Says whether the controller
+    /// took them: one that keeps its own limits does not.
+    pub fn set_travel(&mut self, xyz: [(f64, f64); 3]) -> bool {
+        let mut all = [(0.0, 0.0); AXES];
+        all[..3].copy_from_slice(&xyz);
+        let ok = self.controller.set_travel(all);
+        if !ok {
+            self.say("travel: the controller keeps its own limits");
+        }
+        ok
+    }
+
+    /// Stores the place where the machine is as `G28` or `G30`.
+    pub fn store_position(&mut self, which: u8) {
+        let line = if which == 28 { "G28.1" } else { "G30.1" };
+        self.own_line(line, line);
+    }
+
+    pub fn spindle(&mut self, rpm: Option<f64>) {
+        match rpm {
+            Some(r) => self.own_line("spindle", &format!("M3 S{r:.0}")),
+            None => self.own_line("spindle", "M5"),
+        }
+    }
+
+    pub fn coolant(&mut self, on: bool) {
+        self.own_line("coolant", if on { "M8" } else { "M9" });
+    }
+
+    /// The next line to send is the first again.
+    pub fn rewind(&mut self) {
+        self.running = false;
+        self.paused = false;
+        self.next = 0;
+    }
+
+    /// Takes the program away.
+    pub fn clear_program(&mut self) {
+        self.load("");
+    }
+
     pub fn home(&mut self) {
         self.order("home", Command::Home(Vec::new()));
     }
@@ -383,6 +424,38 @@ M5",
         // a refused line changes nothing
         s.mdi("G2 X1");
         assert!(s.modal.g_codes().contains(&"G90".to_string()));
+    }
+
+    #[test]
+    fn the_menu_orders_set_the_spindle_the_coolant_the_stored_positions_and_the_travel() {
+        let mut s = session();
+        s.spindle(Some(12_000.0));
+        assert_eq!(s.status.spindle_rpm, 12_000.0);
+        assert_eq!(s.modal.m_codes()[0], "M3");
+        s.spindle(None);
+        assert_eq!(s.status.spindle_rpm, 0.0);
+        s.coolant(true);
+        assert_eq!(s.modal.m_codes()[1], "M8");
+        s.coolant(false);
+        s.mdi("G0 X10 Y20 Z-3");
+        s.store_position(30);
+        s.mdi("G0 X0 Y0 Z0");
+        s.go_g30();
+        assert_eq!(s.status.machine_mm[0], 10.0);
+        assert!(s.set_travel([(0.0, 50.0), (0.0, 50.0), (-10.0, 10.0)]));
+        s.mdi("G0 X90");
+        assert!(s.alarm());
+        s.unlock();
+        s.load(
+            "G0 X1
+G0 X2",
+        );
+        s.start();
+        s.pump(1);
+        s.rewind();
+        assert_eq!((s.next, s.running), (0, false));
+        s.clear_program();
+        assert!(s.program.iter().all(|l| l.is_empty()));
     }
 
     #[test]

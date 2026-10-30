@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Menus, settings and files like PlanetCNC:** the menus File, View, Program, Machine and Help (open, recent files, save, edit the program, the zeros, the stored positions, the spindle and the coolant, what is shown, About); a settings window with its sections (units, language and the eleven themes, travel limits, jog) kept between runs, whose travel limits reach the machine; the Open and Save windows of the suite (`eh3d-filedialog`) with the places, the sorting, the filters, the recent files, the extension of a saved file and the question before a file is replaced; an editor of the program; the position in inches when the settings say so; 22 tests.
 - **The left panel made like the one of PlanetCNC:** a column of buttons (set the work zero in XYZ or in XY, go to the stored positions G28 and G30, go to the zero in XY or in Z, home), the position with the tabs Work, Machine, Operator and GCode and the four axes X, Y, Z and A (the letter of an axis sets its zero), the speed and the spindle, the active G-codes and M-codes or the inputs and outputs, and the jog with the A axis; the session keeps the codes in force, the zero of the operator and the stored positions (tested).
 ## [0.0.3] - The first window: a simulated machine with jog, zero, home, commands and a G-code program with its path, in eight languages and five themes
 

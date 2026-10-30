@@ -14,12 +14,12 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-22-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** a Rust program with a window (`motioncnc`) that drives a **simulated** machine: it shows the position of the machine (work and machine), moves it by hand with a jog pad, sets the zero, homes, takes the commands typed by the operator, runs a G-code program line by line (with pause, stop and the emergency stop), draws the path of the program on the table with the lines done marked, and stops at what the controller refuses. The window speaks eight languages and wears five themes. The controller interface (`eh3d-controller`, in EH3D-COMMON) has GRBL written against a scripted line and lists the other families as not driven yet. 12 tests run on a computer. **Nothing here has run on a real machine**, no serial port or network connection is opened, and arcs and the other codes are neither drawn nor run by the simulator.
+**Honesty check - what actually runs today:** a Rust program with a window (`motioncnc`) that drives a **simulated** machine: it shows the position of the machine (work and machine), moves it by hand with a jog pad, sets the zero, homes, takes the commands typed by the operator, runs a G-code program line by line (with pause, stop and the emergency stop), draws the path of the program on the table with the lines done marked, and stops at what the controller refuses. The window speaks eight languages and wears five themes. The controller interface (`eh3d-controller`, in EH3D-COMMON) has GRBL written against a scripted line and lists the other families as not driven yet. 22 tests run on a computer. **Nothing here has run on a real machine**, no serial port or network connection is opened, and arcs and the other codes are neither drawn nor run by the simulator.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.3` |
 | Maturity | Scaffolding |
-| Tests | 12 |
+| Tests | 22 |
 | Stack | Rust |
 | On real hardware | No: it drives only a simulated machine |
 
@@ -48,7 +48,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Base library | 🟡 | A Rust crate that re-exports `scene`, `texts` and `theme` of `eh3d-view` under this program's name; it needs the folder of EH3D-COMMON next to it. |
 | Scene and views | 🟡 | Written and tested in EH3D-COMMON; the window of this program draws the path of a program on the table and the position of the tool (seen on a computer). |
 | Themes and texts | 🟡 | Five themes and the words of the interface in eight languages, seen in the window of this program. |
-| Tests | 🟡 | 12 tests pass on a computer (`cargo test --features gui`): the session (jog, zero, home, a program, pause, alarm, emergency stop), the path of a program and the command line; the simulated controller is tested in EH3D-COMMON. |
+| Tests | 🟡 | 22 tests pass on a computer (`cargo test --features gui`): the session (jog, zero, home, a program, pause, alarm, emergency stop), the path of a program and the command line; the simulated controller is tested in EH3D-COMMON. |
 | Window and jog | 🟡 | Works on a computer with the simulated controller: position, jog pad, steps, feed, home, zero, unlock, a line of commands and a log; no real machine. |
 | Machine control | 🟠 | Only the simulator: a program runs line by line with pause, stop and the emergency stop; no real controller is connected from here yet. |
 | Documentation | 🟡 | README in eight languages, the two pictures, three sample programs and the changelog. |
@@ -60,6 +60,7 @@ Each line is one part of this repository and the light says how far it is today.
 * The **path of a program** (`src/gcode.rs`): the straight moves (`G0`, `G1`, absolute or relative, in mm or inches) drawn before the program runs; arcs are not drawn.
 * The **simulated controller** (`eh3d_controller::sim`, in EH3D-COMMON): a machine in memory with travel limits that raise an alarm; the controller families of the market are listed in `eh3d-controller`, GRBL is the first one written and the others show as not driven yet.
 * The **themes and the words** of `eh3d-view`: Forge (the default), Neon Arcade, Glass Pro, the classic Windows grey and one that follows Windows, and the interface in English, Spanish, Italian, German, French, Portuguese, Chinese and Japanese. What it will be: one program to drill, to route and to do 2D and 3D CNC work on the engines of EH3D-DRILLPRO and EH3D-ROUTEPRO; that part does not exist yet.
+* The **menus, the settings and the files**: the menus File, View, Program, Machine and Help with what PlanetCNC has in them (open, recent files, save, edit, the zeros, the stored positions, the spindle and the coolant); a settings window (units, language, eleven themes, travel limits, jog) that is kept between runs; and the Open and Save windows of the suite (`eh3d-filedialog`: places, sorting, filters, the extension of a saved file and the question before a file is replaced).
 
 ## 🧩 Role in EH3D
 
@@ -82,16 +83,28 @@ How the parts fit together: who will use it, what this repository holds and what
 <p align="center"><em>A program running on the simulated machine: the lines done are green, the line that goes now is bright, the path is drawn on the table and the tool is where the machine is.</em></p>
 
 <p align="center">
-  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+  <img src="images/screenshots/spiral-neon.png" alt="Midnight theme" width="100%">
 </p>
 
-<p align="center"><em>The Neon Arcade theme, with a long program that has finished.</em></p>
+<p align="center"><em>The Midnight theme, with a long program that has finished.</em></p>
 
 <p align="center">
-  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+  <img src="images/screenshots/square-german.png" alt="German interface, light theme" width="100%">
 </p>
 
-<p align="center"><em>The interface in German with the Glass theme: every word of the window follows the language.</em></p>
+<p align="center"><em>The interface in German with the light Paper theme: every word of the window follows the language.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/settings-window.png" alt="settings window" width="100%">
+</p>
+
+<p align="center"><em>The settings window, with the sections on the left like the tree of PlanetCNC: the language, the eleven themes and what is shown.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/open-window.png" alt="Open window" width="100%">
+</p>
+
+<p align="center"><em>The Open window of the suite: places, recent files, the list of the folder with its dates and sizes, the file name and the type.</em></p>
 
 ## 🔒 Security & Safety
 
@@ -137,7 +150,9 @@ EH3D-MOTIONCNC/
 │   ├── session.rs                               what is done with a controller: jog, zero, home, a program line by line, pause, stop, alarms
 │   ├── gcode.rs                                 the straight moves of a G-code program, to draw its path
 │   ├── cli.rs                                   the command line: the file, the language, the theme and the picture options
-│   └── bin/motioncnc.rs                         the program that opens the window
+│   ├── bin/motioncnc.rs                         the program that opens the window
+│   ├── settings.rs                              what is kept between runs
+│   └── gui/dialogs.rs                           menus, settings, Open, Save, editor
 ├── examples/                                    three sample G-code programs, from a square to a long spiral
 ├── tools/                                       CI check, README check and the picture tools
 ├── docs/                                        the sources of the Architecture and Repository Structure pictures

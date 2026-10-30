@@ -9,3 +9,4 @@ pub mod gcode;
 #[cfg(feature = "gui")]
 pub mod gui;
 pub mod session;
+pub mod settings;

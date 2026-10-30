@@ -16,8 +16,12 @@ use eh3d_view::texts::{tr, Lang, Text};
 use eh3d_view::theme::{Rgb, Theme, ThemeId};
 
 use crate::cli::Options;
+use crate::settings::{settings_path, Settings};
+
+mod dialogs;
 use crate::gcode::{self, Segment};
 use crate::session::{Session, STEPS};
+use dialogs::{lang_name, Win};
 
 fn col(c: Rgb) -> Color32 {
     Color32::from_rgb(c.0, c.1, c.2)
@@ -126,6 +130,12 @@ pub struct App {
     visuals_for: Option<ThemeId>,
     pos_tab: PosTab,
     info_tab: u8,
+    settings: Settings,
+    settings_path: PathBuf,
+    win: Option<Win>,
+    fit_program: bool,
+    quit: bool,
+    dialog_error: Option<&'static str>,
     mdi: String,
     path: String,
     path_toolpath: Vec<Segment>,
@@ -136,13 +146,31 @@ pub struct App {
 
 impl App {
     pub fn new(o: &Options) -> App {
+        let path = settings_path();
+        let mut settings = Settings::load(&path);
+        if let Some(l) = o.lang {
+            settings.lang = l;
+        }
+        if let Some(th) = o.theme {
+            settings.theme = th;
+        }
+        let mut session = Session::new(Box::new(SimController::new()));
+        session.step_mm = settings.step_mm;
+        session.feed_mm_min = settings.feed_mm_min;
+        session.set_travel(settings.travel);
         let mut app = App {
-            session: Session::new(Box::new(SimController::new())),
-            lang: o.lang.unwrap_or(Lang::En),
-            theme: Theme::for_id(o.theme.unwrap_or(ThemeId::Forge)),
+            session,
+            lang: settings.lang,
+            theme: Theme::for_id(settings.theme),
             visuals_for: None,
             pos_tab: PosTab::Work,
             info_tab: 0,
+            settings,
+            settings_path: path,
+            win: None,
+            fit_program: false,
+            quit: false,
+            dialog_error: None,
             mdi: String::new(),
             path: String::new(),
             path_toolpath: Vec::new(),
@@ -156,6 +184,9 @@ impl App {
         };
         if let Some(f) = &o.file {
             app.open(f);
+        }
+        if let Some(w) = &o.window {
+            app.open_window(w);
         }
         app
     }
@@ -172,6 +203,7 @@ impl App {
                 self.session.load(&text);
                 self.path_toolpath = gcode::toolpath(&self.session.program);
                 self.path = path.display().to_string();
+                self.remember(path);
             }
             Err(e) => self.session.log.push(format!("{}: {e}", path.display())),
         }
@@ -228,24 +260,25 @@ impl App {
                 ui.separator();
                 let mut lang = self.lang;
                 egui::ComboBox::from_id_salt("lang")
-                    .selected_text(lang.code().to_uppercase())
-                    .width(60.0)
+                    .selected_text(lang_name(lang))
                     .show_ui(ui, |ui| {
                         for l in Lang::ALL {
-                            ui.selectable_value(&mut lang, l, l.code().to_uppercase());
+                            ui.selectable_value(&mut lang, l, lang_name(l));
                         }
                     });
-                self.lang = lang;
                 let mut id = self.theme.id;
                 egui::ComboBox::from_id_salt("theme")
-                    .selected_text(id.key())
+                    .selected_text(self.t(id.text()))
                     .show_ui(ui, |ui| {
                         for i in ThemeId::ALL {
-                            ui.selectable_value(&mut id, i, i.key());
+                            ui.selectable_value(&mut id, i, self.t(i.text()));
                         }
                     });
-                if id != self.theme.id {
-                    self.theme = Theme::for_id(id);
+                if lang != self.lang || id != self.theme.id {
+                    self.settings.lang = lang;
+                    self.settings.theme = id;
+                    self.apply_settings();
+                    self.save_settings();
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     let estop = egui::Button::new(
@@ -277,10 +310,12 @@ impl App {
     /// The left panel, made like the one of PlanetCNC: a column of buttons for the zeros and the stored positions, the position with its
     /// tabs (work, machine, operator, GCode), the speed and the spindle, the codes in force or the inputs and outputs, and the jog.
     fn left(&mut self, ui: &mut egui::Ui) {
-        egui::Panel::left("icons").exact_size(74.0).show(ui, |ui| {
-            ui.add_space(4.0);
-            self.icon_column(ui);
-        });
+        if self.settings.show_buttons {
+            egui::Panel::left("icons").exact_size(74.0).show(ui, |ui| {
+                ui.add_space(4.0);
+                self.icon_column(ui);
+            });
+        }
         egui::Panel::left("left").exact_size(360.0).show(ui, |ui| {
             ui.add_space(4.0);
             egui::ScrollArea::vertical()
@@ -402,10 +437,19 @@ impl App {
             ui.selectable_value(&mut self.pos_tab, PosTab::GCode, gcode);
         });
         let st = self.session.status.clone();
-        let values = match self.pos_tab {
+        let mut values = match self.pos_tab {
             PosTab::Work | PosTab::GCode => st.work_mm,
             PosTab::Machine => st.machine_mm,
             PosTab::Operator => self.session.operator_mm(),
+        };
+        // the machine and the program go on in mm; only what is shown changes
+        let (decimals, unit) = if self.settings.inches {
+            for v in &mut values {
+                *v /= 25.4;
+            }
+            (4, "in")
+        } else {
+            (3, "mm")
         };
         let tip = self.t(Text::McZeroAxis);
         for (i, name) in ["X", "Y", "Z", "A"].iter().enumerate() {
@@ -430,7 +474,7 @@ impl App {
                         }
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.label(
-                                RichText::new(format!("{:9.3}", values[i]))
+                                RichText::new(format!("{:9.1$} {unit}", values[i], decimals))
                                     .monospace()
                                     .size(30.0)
                                     .color(col(self.theme.accent)),
@@ -608,6 +652,9 @@ impl App {
     }
 
     fn right(&mut self, ui: &mut egui::Ui) {
+        if !self.settings.show_program {
+            return;
+        }
         egui::Panel::right("right")
             .exact_size(330.0)
             .show(ui, |ui| {
@@ -684,8 +731,9 @@ impl App {
     }
 
     fn bottom(&mut self, ui: &mut egui::Ui) {
+        let height = if self.settings.show_log { 120.0 } else { 44.0 };
         egui::Panel::bottom("bottom")
-            .exact_size(120.0)
+            .exact_size(height)
             .show(ui, |ui| {
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
@@ -703,6 +751,9 @@ impl App {
                         r.request_focus();
                     }
                 });
+                if !self.settings.show_log {
+                    return;
+                }
                 ui.separator();
                 ui.label(
                     RichText::new(self.t(Text::McLog).to_uppercase()).color(col(self.theme.dim)),
@@ -732,29 +783,36 @@ impl App {
             let (rect, _) = ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
             let p = ui.painter_at(rect);
             p.rect_filled(rect, 8.0, col(t.panel));
-            let (tx0, tx1) = (0.0f64, 500.0f64);
-            let (ty0, ty1) = (0.0f64, 300.0f64);
-            // the segments decide how much of the table is shown
-            let (mut maxx, mut maxy) = (tx1, ty1);
+            let ((tx0, tx1), (ty0, ty1)) = (
+                (self.settings.travel[0].0, self.settings.travel[0].1),
+                (self.settings.travel[1].0, self.settings.travel[1].1),
+            );
+            // the view: the table, or the table and the program when it goes beyond it, or only the program
+            let (mut minx, mut miny, mut maxx, mut maxy) = (tx0, ty0, tx1, ty1);
+            if self.fit_program && !self.path_toolpath.is_empty() {
+                (minx, miny, maxx, maxy) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+            }
             for s in &self.path_toolpath {
                 for pt in [s.from, s.to] {
+                    minx = minx.min(pt.0);
+                    miny = miny.min(pt.1);
                     maxx = maxx.max(pt.0);
                     maxy = maxy.max(pt.1);
                 }
             }
+            let (w, h) = ((maxx - minx).max(1.0), (maxy - miny).max(1.0));
             let inner = rect.shrink(18.0);
-            let k =
-                ((inner.width() as f64) / (maxx - tx0)).min((inner.height() as f64) / (maxy - ty0));
+            let k = ((inner.width() as f64) / w).min((inner.height() as f64) / h);
             let at = |x: f64, y: f64| {
                 Pos2::new(
-                    inner.left() + ((x - tx0) * k) as f32,
-                    inner.bottom() - ((y - ty0) * k) as f32,
+                    inner.left() + ((x - minx) * k) as f32,
+                    inner.bottom() - ((y - miny) * k) as f32,
                 )
             };
             // the table and its grid every 50 mm
             let table = Rect::from_two_pos(at(tx0, ty0), at(tx1, ty1));
             p.rect_filled(table, 2.0, col(t.table));
-            let mut x = 0.0;
+            let mut x = (tx0 / 50.0).ceil() * 50.0;
             while x <= tx1 {
                 p.line_segment(
                     [at(x, ty0), at(x, ty1)],
@@ -762,7 +820,7 @@ impl App {
                 );
                 x += 50.0;
             }
-            let mut y = 0.0;
+            let mut y = (ty0 / 50.0).ceil() * 50.0;
             while y <= ty1 {
                 p.line_segment(
                     [at(tx0, y), at(tx1, y)],
@@ -778,6 +836,9 @@ impl App {
             );
             let next = self.session.next;
             for s in &self.path_toolpath {
+                if s.rapid && !self.settings.show_rapids {
+                    continue;
+                }
                 let done = s.line < next;
                 let color = match (s.rapid, done) {
                     (true, _) => alpha(col(t.dim), 140),
@@ -804,7 +865,7 @@ impl App {
             p.text(
                 rect.right_bottom() - Vec2::new(10.0, 8.0),
                 Align2::RIGHT_BOTTOM,
-                format!("{:.0} x {:.0} mm", maxx, maxy),
+                format!("{:.0} x {:.0} mm", w, h),
                 egui::FontId::proportional(12.0),
                 col(t.dim),
             );
@@ -837,11 +898,16 @@ impl eframe::App for App {
             self.session.pump(1);
             ctx.request_repaint_after(std::time::Duration::from_millis(60));
         }
+        self.menu_bar(ui);
         self.top(ui);
         self.bottom(ui);
         self.left(ui);
         self.right(ui);
         self.center(ui);
+        self.windows(&ctx);
+        if self.quit {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        }
         let shot = self
             .shot
             .as_ref()

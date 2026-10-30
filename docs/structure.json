@@ -109,6 +109,32 @@
             "zh": "打开窗口的程序",
             "pt": "o programa que abre a janela"
           }
+        },
+        {
+          "name": "settings.rs",
+          "desc": {
+            "en": "what is kept between runs",
+            "es": "lo que se recuerda entre ejecuciones",
+            "de": "was zwischen Läufen gemerkt wird",
+            "fr": "ce qui est mémorisé entre exécutions",
+            "it": "ciò che si ricorda tra esecuzioni",
+            "ja": "実行間で記憶する設定",
+            "zh": "两次运行间记住的设置",
+            "pt": "o que se recorda entre execuções"
+          }
+        },
+        {
+          "name": "gui/dialogs.rs",
+          "desc": {
+            "en": "menus, settings, Open, Save, editor",
+            "es": "menús, ajustes, Abrir, Guardar, editor",
+            "de": "Menüs, Einstellungen, Öffnen, Speichern",
+            "fr": "menus, réglages, Ouvrir, Enregistrer",
+            "it": "menu, impostazioni, Apri, Salva, editor",
+            "ja": "メニュー、設定、開く、保存、編集",
+            "zh": "菜单、设置、打开、保存、编辑器",
+            "pt": "menus, definições, Abrir, Guardar, editor"
+          }
         }
       ]
     },

@@ -1,0 +1,260 @@
+//! What the program remembers between runs: the language and the theme, the units, the travel limits of the machine, the steps of the
+//! jog, which parts of the window are shown and the files opened last. It is a small text of `key = value` lines in the settings folder of
+//! the user, with the other EH3D programs.
+
+use std::path::{Path, PathBuf};
+
+use eh3d_view::texts::Lang;
+use eh3d_view::theme::ThemeId;
+
+/// How many recent files are kept.
+pub const RECENT_MAX: usize = 8;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Settings {
+    pub lang: Lang,
+    pub theme: ThemeId,
+    /// Lengths are shown in inches instead of millimetres (the machine and the program go on in mm).
+    pub inches: bool,
+    /// The limits of the travel of X, Y and Z in mm (minimum, maximum).
+    pub travel: [(f64, f64); 3],
+    /// The step and the speed of the jog at the start.
+    pub step_mm: f64,
+    pub feed_mm_min: f64,
+    /// The speed of the spindle that the menu turns on with `M3`.
+    pub spindle_rpm: f64,
+    pub show_buttons: bool,
+    pub show_program: bool,
+    pub show_log: bool,
+    pub show_rapids: bool,
+    /// The files opened last, the newest first.
+    pub recent: Vec<String>,
+    /// The folder of the last file opened or saved.
+    pub last_dir: String,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings {
+            lang: Lang::En,
+            theme: ThemeId::Forge,
+            inches: false,
+            travel: [(0.0, 500.0), (0.0, 300.0), (-100.0, 50.0)],
+            step_mm: 1.0,
+            feed_mm_min: 600.0,
+            spindle_rpm: 10_000.0,
+            show_buttons: true,
+            show_program: true,
+            show_log: true,
+            show_rapids: true,
+            recent: Vec::new(),
+            last_dir: String::new(),
+        }
+    }
+}
+
+fn on(v: &str) -> bool {
+    !matches!(v.trim(), "no" | "off" | "false" | "0")
+}
+
+fn yes(b: bool) -> &'static str {
+    if b {
+        "yes"
+    } else {
+        "no"
+    }
+}
+
+impl Settings {
+    /// The text of the file: `key = value` lines; what is not known or not valid keeps its default.
+    pub fn parse(text: &str) -> Settings {
+        let mut s = Settings::default();
+        for line in text.lines() {
+            let Some((k, v)) = line.split_once('=') else {
+                continue;
+            };
+            let (k, v) = (k.trim().to_ascii_lowercase(), v.trim());
+            let num = |v: &str| v.parse::<f64>().ok().filter(|x| x.is_finite());
+            match k.as_str() {
+                "lang" => s.lang = Lang::from_code(v).unwrap_or(s.lang),
+                "theme" => s.theme = ThemeId::from_key(v).unwrap_or(s.theme),
+                "units" => {
+                    s.inches = v.eq_ignore_ascii_case("in") || v.eq_ignore_ascii_case("inch")
+                }
+                "step" => {
+                    s.step_mm = num(v)
+                        .filter(|x| (0.001..=1000.0).contains(x))
+                        .unwrap_or(s.step_mm)
+                }
+                "feed" => {
+                    s.feed_mm_min = num(v)
+                        .filter(|x| (1.0..=100_000.0).contains(x))
+                        .unwrap_or(s.feed_mm_min)
+                }
+                "spindle" => {
+                    s.spindle_rpm = num(v)
+                        .filter(|x| (0.0..=1_000_000.0).contains(x))
+                        .unwrap_or(s.spindle_rpm)
+                }
+                "show_buttons" => s.show_buttons = on(v),
+                "show_program" => s.show_program = on(v),
+                "show_log" => s.show_log = on(v),
+                "show_rapids" => s.show_rapids = on(v),
+                "last_dir" => s.last_dir = v.to_string(),
+                "recent" => {
+                    s.recent = v
+                        .split('|')
+                        .map(str::trim)
+                        .filter(|p| !p.is_empty())
+                        .take(RECENT_MAX)
+                        .map(str::to_string)
+                        .collect()
+                }
+                "travel_x" | "travel_y" | "travel_z" => {
+                    let i = (k.as_bytes()[7] - b'x') as usize;
+                    if let Some((lo, hi)) = v.split_once(',') {
+                        if let (Some(lo), Some(hi)) = (num(lo.trim()), num(hi.trim())) {
+                            if hi > lo {
+                                s.travel[i] = (lo, hi);
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        s
+    }
+
+    pub fn to_text(&self) -> String {
+        let t = &self.travel;
+        format!(
+            "lang = {}\ntheme = {}\nunits = {}\nstep = {}\nfeed = {}\nspindle = {}\nshow_buttons = {}\nshow_program = {}\nshow_log = {}\nshow_rapids = {}\ntravel_x = {},{}\ntravel_y = {},{}\ntravel_z = {},{}\nlast_dir = {}\nrecent = {}\n",
+            self.lang.code(),
+            self.theme.key(),
+            if self.inches { "in" } else { "mm" },
+            self.step_mm,
+            self.feed_mm_min,
+            self.spindle_rpm,
+            yes(self.show_buttons),
+            yes(self.show_program),
+            yes(self.show_log),
+            yes(self.show_rapids),
+            t[0].0,
+            t[0].1,
+            t[1].0,
+            t[1].1,
+            t[2].0,
+            t[2].1,
+            self.last_dir,
+            self.recent.join("|")
+        )
+    }
+
+    /// Puts a file at the head of the recent ones (it is not listed twice).
+    pub fn remember_recent(&mut self, path: &str) {
+        self.recent.retain(|p| p != path);
+        self.recent.insert(0, path.to_string());
+        self.recent.truncate(RECENT_MAX);
+    }
+
+    pub fn load(path: &Path) -> Settings {
+        std::fs::read_to_string(path)
+            .map(|t| Settings::parse(&t))
+            .unwrap_or_default()
+    }
+
+    pub fn save(&self, path: &Path) -> std::io::Result<()> {
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        std::fs::write(path, self.to_text())
+    }
+}
+
+/// Where the file is: the settings folder of the user, with the other EH3D programs.
+pub fn settings_path() -> PathBuf {
+    // the tests never touch the settings of the user
+    if cfg!(test) {
+        return std::env::temp_dir()
+            .join(format!("eh3d-motioncnc-test-{}.cfg", std::process::id()));
+    }
+    let base = if cfg!(windows) {
+        std::env::var_os("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("EH3D")
+    } else {
+        std::env::var_os("XDG_CONFIG_HOME")
+            .map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("eh3d")
+    };
+    base.join("motioncnc.cfg")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_settings_are_written_and_read_back() {
+        let mut s = Settings {
+            lang: Lang::Ja,
+            theme: ThemeId::Midnight,
+            inches: true,
+            travel: [(-10.0, 410.5), (0.0, 250.0), (-80.0, 20.0)],
+            step_mm: 0.1,
+            feed_mm_min: 1200.0,
+            spindle_rpm: 18_000.0,
+            show_buttons: false,
+            show_program: true,
+            show_log: false,
+            show_rapids: false,
+            recent: vec![],
+            last_dir: "C:/jobs".into(),
+        };
+        s.remember_recent("C:/jobs/a.nc");
+        s.remember_recent("C:/jobs/b.nc");
+        let path = std::env::temp_dir().join(format!(
+            "eh3d-motioncnc-settings-{}.cfg",
+            std::process::id()
+        ));
+        s.save(&path).unwrap();
+        assert_eq!(Settings::load(&path), s);
+        assert_eq!(
+            Settings::parse(&Settings::default().to_text()),
+            Settings::default()
+        );
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn what_is_wrong_keeps_the_default() {
+        let s = Settings::parse(
+            "lang = xx\ntheme = pink\nstep = 0\nfeed = fast\ntravel_x = 10,5\ntravel_y = a,b\nspindle = -5\nsomething else\nunits = in\n",
+        );
+        let d = Settings::default();
+        assert_eq!(
+            (s.lang, s.theme, s.step_mm, s.feed_mm_min),
+            (d.lang, d.theme, d.step_mm, d.feed_mm_min)
+        );
+        assert_eq!((s.travel, s.spindle_rpm), (d.travel, d.spindle_rpm));
+        assert!(s.inches);
+    }
+
+    #[test]
+    fn only_the_last_files_are_remembered_and_none_twice() {
+        let mut s = Settings::default();
+        for i in 0..12 {
+            s.remember_recent(&format!("C:/jobs/{i}.nc"));
+        }
+        assert_eq!(s.recent.len(), RECENT_MAX);
+        assert_eq!(s.recent[0], "C:/jobs/11.nc");
+        s.remember_recent("C:/jobs/9.nc");
+        assert_eq!(s.recent[0], "C:/jobs/9.nc");
+        assert_eq!(s.recent.iter().filter(|p| p.ends_with("/9.nc")).count(), 1);
+        assert_eq!(Settings::parse(&s.to_text()).recent, s.recent);
+    }
+}

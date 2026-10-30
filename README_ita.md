@@ -14,12 +14,12 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-22-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Verifica di onestà - cosa funziona oggi:** un programma Rust con una finestra (`motioncnc`) che pilota una macchina **simulata**: mostra la posizione della macchina (pezzo e macchina), la sposta a mano con un tastierino di jog, imposta lo zero, esegue l'origine, accetta i comandi digitati dall'operatore, esegue un programma G-code riga per riga (con pausa, stop e arresto di emergenza), disegna il percorso del programma sul piano con le righe eseguite segnate e si ferma su ciò che il controllore rifiuta. La finestra parla otto lingue e porta cinque temi. L'interfaccia dei controllori (`eh3d-controller`, in EH3D-COMMON) ha GRBL scritto contro una linea simulata ed elenca le altre famiglie come non ancora pilotate. 12 test girano su un computer. **Nulla di qui è stato eseguito su una macchina reale**, non si apre alcuna porta seriale né connessione di rete, e gli archi e gli altri codici il simulatore non li disegna né li esegue.
+**Verifica di onestà - cosa funziona oggi:** un programma Rust con una finestra (`motioncnc`) che pilota una macchina **simulata**: mostra la posizione della macchina (pezzo e macchina), la sposta a mano con un tastierino di jog, imposta lo zero, esegue l'origine, accetta i comandi digitati dall'operatore, esegue un programma G-code riga per riga (con pausa, stop e arresto di emergenza), disegna il percorso del programma sul piano con le righe eseguite segnate e si ferma su ciò che il controllore rifiuta. La finestra parla otto lingue e porta cinque temi. L'interfaccia dei controllori (`eh3d-controller`, in EH3D-COMMON) ha GRBL scritto contro una linea simulata ed elenca le altre famiglie come non ancora pilotate. 22 test girano su un computer. **Nulla di qui è stato eseguito su una macchina reale**, non si apre alcuna porta seriale né connessione di rete, e gli archi e gli altri codici il simulatore non li disegna né li esegue.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versione | `0.0.3` |
 | Maturità | Impalcatura |
-| Test | 12 |
+| Test | 22 |
 | Stack tecnologico | Rust |
 | Su hardware reale | No: pilota solo una macchina simulata |
 
@@ -48,7 +48,7 @@ Ogni riga è una parte di questo repository e la luce dice a che punto è oggi. 
 | Libreria di base | 🟡 | Un crate Rust che riesporta `scene`, `texts` e `theme` di `eh3d-view` con il nome di questo programma; richiede la cartella di EH3D-COMMON accanto. |
 | Scena e viste | 🟡 | Scritta e provata in EH3D-COMMON; la finestra di questo programma disegna il percorso di un programma sul piano e la posizione dell'utensile (vista su un computer). |
 | Temi e testi | 🟡 | Cinque temi e le parole dell'interfaccia in otto lingue, viste nella finestra di questo programma. |
-| Test | 🟡 | 12 test passano su un computer (`cargo test --features gui`): la sessione (jog, zero, origine, un programma, pausa, allarme, arresto di emergenza), il percorso di un programma e la riga di comando; il controllore simulato è provato in EH3D-COMMON. |
+| Test | 🟡 | 22 test passano su un computer (`cargo test --features gui`): la sessione (jog, zero, origine, un programma, pausa, allarme, arresto di emergenza), il percorso di un programma e la riga di comando; il controllore simulato è provato in EH3D-COMMON. |
 | Finestra e jog | 🟡 | Funziona su un computer con il controllore simulato: posizione, tastierino di jog, passi, avanzamento, origine, zero, sblocco, una riga di comandi e un registro; nessuna macchina reale. |
 | Controllo della macchina | 🟠 | Solo il simulatore: un programma gira riga per riga con pausa, stop e arresto di emergenza; da qui non è ancora collegato alcun controllore reale. |
 | Documentazione | 🟡 | README in otto lingue, le due immagini, tre programmi di esempio e il changelog. |
@@ -60,6 +60,7 @@ Ogni riga è una parte di questo repository e la luce dice a che punto è oggi. 
 * Il **percorso di un programma** (`src/gcode.rs`): i movimenti rettilinei (`G0`, `G1`, assoluti o relativi, in mm o pollici) disegnati prima dell'esecuzione; gli archi non sono disegnati.
 * Il **controllore simulato** (`eh3d_controller::sim`, in EH3D-COMMON): una macchina in memoria con limiti di corsa che danno allarme; le famiglie di controllori del mercato sono elencate in `eh3d-controller`, GRBL è la prima scritta e le altre risultano non ancora pilotate.
 * I **temi e le parole** di `eh3d-view`: Forge (predefinito), Neon Arcade, Glass Pro, il grigio classico di Windows e uno che segue Windows, e l'interfaccia in inglese, spagnolo, italiano, tedesco, francese, portoghese, cinese e giapponese. Cosa sarà: un programma per forare, fresare e fare CNC 2D e 3D sui motori di EH3D-DRILLPRO ed EH3D-ROUTEPRO; quella parte non esiste ancora.
+* I **menu, le impostazioni e i file**: i menu File, Visualizza, Programma, Macchina e Aiuto con ciò che ha PlanetCNC (apri, recenti, salva, modifica, gli zeri, le posizioni memorizzate, il mandrino e il refrigerante); una finestra di impostazioni (unità, lingua, undici temi, limiti di corsa, jog) che si ricorda tra le esecuzioni; e le finestre Apri e Salva della suite (`eh3d-filedialog`: luoghi, ordinamento, filtri, l'estensione di un file salvato e la domanda prima di sostituire).
 
 ## 🧩 Ruolo in EH3D
 
@@ -82,16 +83,28 @@ Come si incastrano le parti: chi lo userà, cosa contiene questo repository e su
 <p align="center"><em>Un programma in corso sulla macchina simulata: le righe eseguite in verde, la riga attuale evidenziata, il percorso disegnato sul piano e l'utensile dove si trova la macchina.</em></p>
 
 <p align="center">
-  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+  <img src="images/screenshots/spiral-neon.png" alt="Midnight theme" width="100%">
 </p>
 
-<p align="center"><em>Il tema Neon Arcade, con un programma lungo terminato.</em></p>
+<p align="center"><em>Il tema Mezzanotte, con un programma lungo terminato.</em></p>
 
 <p align="center">
-  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+  <img src="images/screenshots/square-german.png" alt="German interface, light theme" width="100%">
 </p>
 
-<p align="center"><em>L'interfaccia in tedesco con il tema Glass: ogni parola della finestra segue la lingua.</em></p>
+<p align="center"><em>L'interfaccia in tedesco con il tema chiaro Carta: ogni parola della finestra segue la lingua.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/settings-window.png" alt="settings window" width="100%">
+</p>
+
+<p align="center"><em>La finestra delle impostazioni, con le sezioni a sinistra come l'albero di PlanetCNC: la lingua, gli undici temi e ciò che si mostra.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/open-window.png" alt="Open window" width="100%">
+</p>
+
+<p align="center"><em>La finestra Apri della suite: luoghi, recenti, l'elenco della cartella con date e dimensioni, il nome e il tipo.</em></p>
 
 ## 🔒 Sicurezza e protezione
 
@@ -137,7 +150,9 @@ EH3D-MOTIONCNC/
 │   ├── session.rs                               ciò che si fa con un controllore: jog, zero, origine, un programma riga per riga, pausa, stop, allarmi
 │   ├── gcode.rs                                 i movimenti rettilinei di un programma G-code, per disegnarne il percorso
 │   ├── cli.rs                                   la riga di comando: il file, la lingua, il tema e le opzioni per l'immagine
-│   └── bin/motioncnc.rs                         il programma che apre la finestra
+│   ├── bin/motioncnc.rs                         il programma che apre la finestra
+│   ├── settings.rs                              ciò che si ricorda tra esecuzioni
+│   └── gui/dialogs.rs                           menu, impostazioni, Apri, Salva, editor
 ├── examples/                                    tre programmi G-code di esempio, da un quadrato a una lunga spirale
 ├── tools/                                       controllo di CI, del README e strumenti per le immagini
 ├── docs/                                        le sorgenti delle immagini di Architettura e Struttura del repository

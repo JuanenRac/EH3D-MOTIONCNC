@@ -16,6 +16,8 @@ pub struct Options {
     pub wait: u32,
     /// Starts the program as soon as the window is open (`--start`): for the pictures of a program in progress.
     pub start: bool,
+    /// A window to open at the start (`--window settings|open|save|edit|about`): for the pictures.
+    pub window: Option<String>,
 }
 
 impl Options {
@@ -44,6 +46,7 @@ impl Options {
                         .map_err(|_| format!("--wait needs a number, not '{v}'"))?;
                 }
                 "--start" => o.start = true,
+                "--window" => o.window = Some(value("--window")?),
                 other if !other.starts_with("--") && o.file.is_none() => {
                     o.file = Some(PathBuf::from(other))
                 }
@@ -68,6 +71,10 @@ mod tests {
         assert_eq!(o.lang, Some(Lang::De));
         assert_eq!(o.theme, Some(ThemeId::Neon));
         assert_eq!((o.wait, o.start), (9, true));
+        assert_eq!(
+            parse("--window about").unwrap().window.as_deref(),
+            Some("about")
+        );
         assert_eq!(o.file, Some(PathBuf::from("job.nc")));
         assert_eq!(o.shot, Some(PathBuf::from("a.png")));
         assert_eq!(parse("").unwrap().wait, 6);

@@ -1,0 +1,955 @@
+//! The menu bar, the settings window, the Open and Save windows (made over `eh3d-filedialog`, the same state every program of the suite
+//! uses), the editor of the program and the About window.
+
+use eh3d_filedialog::{
+    date_text, size_text, Action, Browser, Chosen, Filter, Mode, PlaceKind, Problem,
+};
+
+use super::*;
+use crate::settings::Settings;
+
+/// The extensions a G-code program usually has.
+const GCODE_EXTENSIONS: [&str; 11] = [
+    "nc", "gcode", "ngc", "tap", "cnc", "txt", "ncc", "gc", "eia", "anc", "mpf",
+];
+
+/// The window that is open over the program (there is one at a time).
+pub(super) enum Win {
+    Settings(Box<Draft>),
+    Open(Box<Browser>),
+    Save(Box<Browser>),
+    /// Save: the file is there already and the operator is asked whether to replace it.
+    Replace(Box<Browser>, PathBuf),
+    Edit(String),
+    About,
+}
+
+/// The settings as they are being changed; they take effect with Ok.
+pub(super) struct Draft {
+    pub s: Settings,
+    pub section: usize,
+}
+
+impl App {
+    fn browser(&self, mode: Mode) -> Box<Browser> {
+        let start = if mode == Mode::Save && !self.path.is_empty() {
+            Path::new(&self.path).parent().map(Path::to_path_buf)
+        } else {
+            None
+        }
+        .or_else(|| {
+            Some(PathBuf::from(&self.settings.last_dir))
+                .filter(|p| !self.settings.last_dir.is_empty() && p.is_dir())
+        })
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
+        let base = std::env::current_exe()
+            .ok()
+            .and_then(|e| e.parent().map(Path::to_path_buf))
+            .unwrap_or_else(|| PathBuf::from("."));
+        let mut b = Browser::new(
+            mode,
+            &start,
+            &base,
+            vec![Filter::new(&GCODE_EXTENSIONS), Filter::any()],
+            Some("nc"),
+        );
+        if mode == Mode::Save {
+            b.name_text = Path::new(&self.path).file_name().map_or_else(
+                || "program.nc".to_string(),
+                |n| n.to_string_lossy().to_string(),
+            );
+        }
+        Box::new(b)
+    }
+
+    /// Opens a window by its name (for the pictures and the command line).
+    pub(super) fn open_window(&mut self, name: &str) {
+        self.win = match name {
+            "settings" => Some(Win::Settings(Box::new(Draft {
+                s: self.settings.clone(),
+                section: 1,
+            }))),
+            "open" => Some(Win::Open(self.browser(Mode::Open))),
+            "save" => Some(Win::Save(self.browser(Mode::Save))),
+            "edit" => Some(Win::Edit(self.session.program.join(
+                "
+",
+            ))),
+            "about" => Some(Win::About),
+            _ => None,
+        };
+    }
+
+    /// Saves the program as it is now, as text.
+    fn save_program(&mut self, path: &Path) -> Result<(), String> {
+        let mut text = self.session.program.join("\n");
+        text.push('\n');
+        std::fs::write(path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+        self.path = path.display().to_string();
+        self.remember(path);
+        Ok(())
+    }
+
+    /// A file that was opened or saved is a recent one, and its folder is where the windows start next time.
+    pub(super) fn remember(&mut self, path: &Path) {
+        self.settings.remember_recent(&path.to_string_lossy());
+        if let Some(d) = path.parent() {
+            self.settings.last_dir = d.display().to_string();
+        }
+        self.save_settings();
+    }
+
+    pub(super) fn save_settings(&self) {
+        let _ = self.settings.save(&self.settings_path);
+    }
+
+    /// The effect of a change of the settings on the window and on the machine.
+    pub(super) fn apply_settings(&mut self) {
+        self.lang = self.settings.lang;
+        if self.theme.id != self.settings.theme {
+            self.theme = Theme::for_id(self.settings.theme);
+        }
+        let travel = self.settings.travel;
+        self.session.set_travel(travel);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------ the menu bar
+
+    pub(super) fn menu_bar(&mut self, ui: &mut egui::Ui) {
+        egui::Panel::top("menu").show(ui, |ui| {
+            egui::MenuBar::new().ui(ui, |ui| {
+                self.menu_file(ui);
+                self.menu_view(ui);
+                self.menu_program(ui);
+                self.menu_machine(ui);
+                self.menu_help(ui);
+            });
+        });
+    }
+
+    fn menu_file(&mut self, ui: &mut egui::Ui) {
+        ui.menu_button(self.t(Text::MenuFile), |ui| {
+            if ui.button(self.t(Text::McOpenGcode)).clicked() {
+                self.win = Some(Win::Open(self.browser(Mode::Open)));
+                ui.close();
+            }
+            let recent: Vec<String> = self
+                .settings
+                .recent
+                .iter()
+                .filter(|p| Path::new(p.as_str()).exists())
+                .cloned()
+                .collect();
+            ui.add_enabled_ui(!recent.is_empty(), |ui| {
+                ui.menu_button(self.t(Text::Recent), |ui| {
+                    for p in &recent {
+                        let name = Path::new(p)
+                            .file_name()
+                            .map_or_else(|| p.clone(), |n| n.to_string_lossy().to_string());
+                        if ui.button(name).on_hover_text(p).clicked() {
+                            let p = PathBuf::from(p);
+                            self.open(&p);
+                            ui.close();
+                        }
+                    }
+                });
+            });
+            if ui.button(self.t(Text::McSaveGcode)).clicked() {
+                self.win = Some(Win::Save(self.browser(Mode::Save)));
+                ui.close();
+            }
+            if ui.button(self.t(Text::McEditProgram)).clicked() {
+                self.win = Some(Win::Edit(self.session.program.join("\n")));
+                ui.close();
+            }
+            ui.separator();
+            if ui
+                .button(format!("{} ...", self.t(Text::SettingsTitle)))
+                .clicked()
+            {
+                self.win = Some(Win::Settings(Box::new(Draft {
+                    s: self.settings.clone(),
+                    section: 0,
+                })));
+                ui.close();
+            }
+            ui.separator();
+            if ui.button(self.t(Text::MenuExit)).clicked() {
+                self.quit = true;
+            }
+        });
+    }
+
+    fn menu_view(&mut self, ui: &mut egui::Ui) {
+        ui.menu_button(self.t(Text::MenuView), |ui| {
+            let (buttons, program, log, rapids) = (
+                self.t(Text::McShowButtons),
+                self.t(Text::McShowProgram),
+                self.t(Text::McShowLog),
+                self.t(Text::McShowRapids),
+            );
+            let mut changed = false;
+            changed |= ui
+                .checkbox(&mut self.settings.show_buttons, buttons)
+                .changed();
+            changed |= ui
+                .checkbox(&mut self.settings.show_program, program)
+                .changed();
+            changed |= ui.checkbox(&mut self.settings.show_log, log).changed();
+            changed |= ui
+                .checkbox(&mut self.settings.show_rapids, rapids)
+                .changed();
+            ui.separator();
+            if ui
+                .radio(!self.fit_program, self.t(Text::McFitTable))
+                .clicked()
+            {
+                self.fit_program = false;
+            }
+            if ui
+                .radio(self.fit_program, self.t(Text::McFitProgram))
+                .clicked()
+            {
+                self.fit_program = true;
+            }
+            if changed {
+                self.save_settings();
+            }
+        });
+    }
+
+    fn menu_program(&mut self, ui: &mut egui::Ui) {
+        ui.menu_button(self.t(Text::McProgram), |ui| {
+            let running = self.session.running && !self.session.paused;
+            if ui
+                .add_enabled(!running, egui::Button::new(self.t(Text::Start)))
+                .clicked()
+            {
+                self.session.start();
+                ui.close();
+            }
+            if ui
+                .add_enabled(running, egui::Button::new(self.t(Text::Pause)))
+                .clicked()
+            {
+                self.session.pause();
+                ui.close();
+            }
+            if ui
+                .add_enabled(
+                    self.session.running || self.session.paused,
+                    egui::Button::new(self.t(Text::Stop)),
+                )
+                .clicked()
+            {
+                self.session.stop();
+                ui.close();
+            }
+            ui.separator();
+            if ui.button(self.t(Text::McRewind)).clicked() {
+                self.session.rewind();
+                ui.close();
+            }
+            if ui.button(self.t(Text::McClearProgram)).clicked() {
+                self.session.clear_program();
+                self.path_toolpath.clear();
+                ui.close();
+            }
+        });
+    }
+
+    fn menu_machine(&mut self, ui: &mut egui::Ui) {
+        ui.menu_button(self.t(Text::McMachine), |ui| {
+            if ui.button(self.t(Text::EmergencyStop)).clicked() {
+                self.session.estop();
+                ui.close();
+            }
+            if ui.button(self.t(Text::McUnlock)).clicked() {
+                self.session.unlock();
+                ui.close();
+            }
+            ui.separator();
+            if ui.button(self.t(Text::McHome)).clicked() {
+                self.session.home();
+                ui.close();
+            }
+            if ui.button(self.t(Text::McZeroXyz)).clicked() {
+                self.session.zero_axes(&[0, 1, 2]);
+                ui.close();
+            }
+            if ui.button(self.t(Text::McZeroXy)).clicked() {
+                self.session.zero_axes(&[0, 1]);
+                ui.close();
+            }
+            if ui.button(self.t(Text::McGoZeroXy)).clicked() {
+                self.session.go_zero_xy();
+                ui.close();
+            }
+            if ui.button(self.t(Text::McGoZeroZ)).clicked() {
+                self.session.go_zero_z();
+                ui.close();
+            }
+            ui.separator();
+            if ui.button(self.t(Text::McGoG28)).clicked() {
+                self.session.go_g28();
+                ui.close();
+            }
+            if ui.button(self.t(Text::McGoG30)).clicked() {
+                self.session.go_g30();
+                ui.close();
+            }
+            if ui.button(self.t(Text::McSetG28)).clicked() {
+                self.session.store_position(28);
+                ui.close();
+            }
+            if ui.button(self.t(Text::McSetG30)).clicked() {
+                self.session.store_position(30);
+                ui.close();
+            }
+            ui.separator();
+            if ui.button(self.t(Text::McSpindleOn)).clicked() {
+                self.session.spindle(Some(self.settings.spindle_rpm));
+                ui.close();
+            }
+            if ui.button(self.t(Text::McSpindleOff)).clicked() {
+                self.session.spindle(None);
+                ui.close();
+            }
+            if ui.button(self.t(Text::McCoolantOn)).clicked() {
+                self.session.coolant(true);
+                ui.close();
+            }
+            if ui.button(self.t(Text::McCoolantOff)).clicked() {
+                self.session.coolant(false);
+                ui.close();
+            }
+        });
+    }
+
+    fn menu_help(&mut self, ui: &mut egui::Ui) {
+        ui.menu_button(self.t(Text::MenuHelp), |ui| {
+            if ui.button(self.t(Text::About)).clicked() {
+                self.win = Some(Win::About);
+                ui.close();
+            }
+        });
+    }
+
+    // ------------------------------------------------------------------------------------------------------------ the windows
+
+    /// Draws the window that is open, if there is one.
+    pub(super) fn windows(&mut self, ctx: &egui::Context) {
+        let Some(win) = self.win.take() else { return };
+        self.win = match win {
+            Win::Settings(d) => self.settings_window(ctx, d),
+            Win::Open(b) => self.file_window(ctx, b, Mode::Open),
+            Win::Save(b) => self.file_window(ctx, b, Mode::Save),
+            Win::Replace(b, p) => self.replace_window(ctx, b, p),
+            Win::Edit(t) => self.edit_window(ctx, t),
+            Win::About => self.about_window(ctx),
+        };
+    }
+
+    fn window(&self, title: &str) -> egui::Window<'static> {
+        egui::Window::new(title.to_string())
+            .collapsible(false)
+            .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+    }
+
+    fn about_window(&mut self, ctx: &egui::Context) -> Option<Win> {
+        let mut open = true;
+        self.window(self.t(Text::About))
+            .open(&mut open)
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.heading(RichText::new("EH3D MOTIONCNC").color(col(self.theme.accent)));
+                ui.label(format!(
+                    "{} {}",
+                    self.t(Text::Version),
+                    env!("CARGO_PKG_VERSION")
+                ));
+                ui.label(format!("{}: GPL-3.0-or-later", self.t(Text::Licence)));
+                ui.add_space(6.0);
+                ui.label(self.t(Text::McAboutBody));
+                ui.hyperlink("https://github.com/JuanenRac/EH3D-MOTIONCNC");
+            });
+        open.then_some(Win::About)
+    }
+
+    fn edit_window(&mut self, ctx: &egui::Context, mut text: String) -> Option<Win> {
+        let mut keep = true;
+        let mut apply = false;
+        self.window(self.t(Text::McEditProgram))
+            .default_size([620.0, 460.0])
+            .show(ctx, |ui| {
+                egui::ScrollArea::vertical()
+                    .max_height(380.0)
+                    .show(ui, |ui| {
+                        ui.add(
+                            egui::TextEdit::multiline(&mut text)
+                                .font(egui::TextStyle::Monospace)
+                                .desired_width(f32::INFINITY)
+                                .desired_rows(20),
+                        );
+                    });
+                ui.horizontal(|ui| {
+                    if ui.button(self.t(Text::Apply)).clicked() {
+                        apply = true;
+                    }
+                    if ui.button(self.t(Text::Close)).clicked() {
+                        keep = false;
+                    }
+                    ui.label(format!(
+                        "{} {}",
+                        text.lines().count(),
+                        self.t(Text::McLine).to_lowercase()
+                    ));
+                });
+            });
+        if apply {
+            self.session.load(&text);
+            self.path_toolpath = gcode::toolpath(&self.session.program);
+        }
+        keep.then_some(Win::Edit(text))
+    }
+
+    fn replace_window(
+        &mut self,
+        ctx: &egui::Context,
+        b: Box<Browser>,
+        path: PathBuf,
+    ) -> Option<Win> {
+        let mut answer = None;
+        self.window(self.t(Text::Save))
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.label(format!(
+                    "{} {}",
+                    path.file_name()
+                        .map_or_else(String::new, |n| n.to_string_lossy().to_string()),
+                    self.t(Text::McReplaceAsk)
+                ));
+                ui.horizontal(|ui| {
+                    if ui.button(self.t(Text::McReplace)).clicked() {
+                        answer = Some(true);
+                    }
+                    if ui.button(self.t(Text::McCancel)).clicked() {
+                        answer = Some(false);
+                    }
+                });
+            });
+        match answer {
+            Some(true) => match self.save_program(&path) {
+                Ok(()) => None,
+                Err(e) => {
+                    self.session.log.push(e);
+                    None
+                }
+            },
+            Some(false) => Some(Win::Save(b)),
+            None => Some(Win::Replace(b, path)),
+        }
+    }
+
+    fn place_name(&self, kind: PlaceKind, name: &str) -> String {
+        match kind {
+            PlaceKind::Examples => self.t(Text::PlaceExamples).to_string(),
+            PlaceKind::Desktop => self.t(Text::PlaceDesktop).to_string(),
+            PlaceKind::Documents => self.t(Text::PlaceDocuments).to_string(),
+            PlaceKind::Downloads => self.t(Text::PlaceDownloads).to_string(),
+            PlaceKind::Drive => name.to_string(),
+        }
+    }
+
+    /// The Open and Save window: the places on the left, the path above, the list of the folder, the file name and the type below.
+    fn file_window(&mut self, ctx: &egui::Context, mut b: Box<Browser>, mode: Mode) -> Option<Win> {
+        let title = if mode == Mode::Open {
+            self.t(Text::McOpenTitle)
+        } else {
+            self.t(Text::McSaveTitle)
+        };
+        let mut done: Option<Chosen> = None;
+        let mut cancel = false;
+        let mut error: Option<&'static str> = None;
+        self.window(title)
+            .default_size([780.0, 500.0])
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("<")
+                        .on_hover_text(self.t(Text::NavBack))
+                        .clicked()
+                    {
+                        b.back();
+                    }
+                    if ui.button("^").on_hover_text(self.t(Text::NavUp)).clicked() {
+                        b.up();
+                    }
+                    let r = ui.add(
+                        egui::TextEdit::singleline(&mut b.path_text).desired_width(f32::INFINITY),
+                    );
+                    if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                        b.go_typed_path();
+                    }
+                });
+                ui.separator();
+                ui.horizontal_top(|ui| {
+                    ui.vertical(|ui| {
+                        ui.set_width(150.0);
+                        ui.label(
+                            RichText::new(self.t(Text::Places).to_uppercase())
+                                .color(col(self.theme.dim)),
+                        );
+                        let places = b.places.clone();
+                        for (i, p) in places.iter().enumerate() {
+                            let on = b.dir.as_ref() == Some(&p.path);
+                            if ui
+                                .selectable_label(on, self.place_name(p.kind, &p.name))
+                                .clicked()
+                            {
+                                b.go_place(i);
+                            }
+                        }
+                        let recent: Vec<String> = self
+                            .settings
+                            .recent
+                            .iter()
+                            .filter(|p| Path::new(p.as_str()).exists())
+                            .take(6)
+                            .cloned()
+                            .collect();
+                        if mode == Mode::Open && !recent.is_empty() {
+                            ui.add_space(8.0);
+                            ui.label(
+                                RichText::new(self.t(Text::Recent).to_uppercase())
+                                    .color(col(self.theme.dim)),
+                            );
+                            for p in recent {
+                                let name = Path::new(&p)
+                                    .file_name()
+                                    .map_or_else(|| p.clone(), |n| n.to_string_lossy().to_string());
+                                if ui.selectable_label(false, name).on_hover_text(&p).clicked() {
+                                    b.name_text = p;
+                                }
+                            }
+                        }
+                    });
+                    ui.add_space(8.0);
+                    ui.vertical(|ui| {
+                        let headings = [Text::ColName, Text::ColDate, Text::ColType, Text::ColSize];
+                        egui::Grid::new("fileheads")
+                            .num_columns(4)
+                            .min_col_width(70.0)
+                            .show(ui, |ui| {
+                                for (c, h) in headings.into_iter().enumerate() {
+                                    let mark = if b.sort.0 == c {
+                                        if b.sort.1 {
+                                            " ^"
+                                        } else {
+                                            " v"
+                                        }
+                                    } else {
+                                        ""
+                                    };
+                                    if ui
+                                        .add(
+                                            egui::Button::new(
+                                                RichText::new(format!("{}{mark}", self.t(h)))
+                                                    .color(col(self.theme.accent)),
+                                            )
+                                            .frame(false),
+                                        )
+                                        .clicked()
+                                    {
+                                        b.sort_by(c);
+                                    }
+                                }
+                                ui.end_row();
+                            });
+                        let mut clicked = None;
+                        let mut activated = None;
+                        egui::ScrollArea::vertical()
+                            .max_height(300.0)
+                            .auto_shrink([false, true])
+                            .show(ui, |ui| {
+                                egui::Grid::new("filelist")
+                                    .num_columns(4)
+                                    .striped(true)
+                                    .min_col_width(70.0)
+                                    .show(ui, |ui| {
+                                        for (i, e) in b.entries.iter().enumerate() {
+                                            let name = if e.is_dir {
+                                                format!("> {}", e.name)
+                                            } else {
+                                                e.name.clone()
+                                            };
+                                            let r = ui.selectable_label(b.sel == Some(i), name);
+                                            if r.clicked() {
+                                                clicked = Some(i);
+                                            }
+                                            if r.double_clicked() {
+                                                activated = Some(i);
+                                            }
+                                            ui.label(
+                                                e.modified.map_or_else(String::new, date_text),
+                                            );
+                                            ui.label(if e.is_dir {
+                                                self.t(Text::TypeFolder).to_string()
+                                            } else {
+                                                e.name
+                                                    .rsplit_once('.')
+                                                    .map_or_else(String::new, |(_, x)| {
+                                                        x.to_uppercase()
+                                                    })
+                                            });
+                                            ui.label(if e.is_dir {
+                                                String::new()
+                                            } else {
+                                                size_text(e.size)
+                                            });
+                                            ui.end_row();
+                                        }
+                                    });
+                            });
+                        if let Some(i) = clicked {
+                            b.select(i);
+                        }
+                        if let Some(i) = activated {
+                            match b.activate(i) {
+                                Action::Chosen(p) => {
+                                    b.name_text = p.file_name().map_or_else(String::new, |n| {
+                                        n.to_string_lossy().to_string()
+                                    });
+                                    match b.confirm() {
+                                        Ok(c) => done = Some(c),
+                                        Err(_) => error = Some(self.t(Text::McNoSuchFile)),
+                                    }
+                                }
+                                Action::Entered | Action::Nothing => {}
+                            }
+                        }
+                    });
+                });
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label(self.t(Text::FileNameLabel));
+                    let r =
+                        ui.add(egui::TextEdit::singleline(&mut b.name_text).desired_width(300.0));
+                    let enter = r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+                    let mut filter = b.filter;
+                    egui::ComboBox::from_id_salt("filefilter")
+                        .selected_text(if filter == 0 {
+                            self.t(Text::McFilterGcode)
+                        } else {
+                            self.t(Text::FilterAny)
+                        })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut filter, 0, self.t(Text::McFilterGcode));
+                            ui.selectable_value(&mut filter, 1, self.t(Text::FilterAny));
+                        });
+                    if filter != b.filter {
+                        b.set_filter(filter);
+                    }
+                    let label = if mode == Mode::Open {
+                        self.t(Text::OpenFile)
+                    } else {
+                        self.t(Text::Save)
+                    };
+                    if ui.button(label).clicked() || enter {
+                        match b.confirm() {
+                            Ok(c) => done = Some(c),
+                            Err(Problem::NoName) => error = Some(self.t(Text::McTypeName)),
+                            Err(Problem::Missing(_)) => error = Some(self.t(Text::McNoSuchFile)),
+                            Err(Problem::IsFolder(p)) => {
+                                b.go(Some(p));
+                                b.name_text.clear();
+                            }
+                            Err(Problem::NoFolder) => error = Some(self.t(Text::McTypeName)),
+                        }
+                    }
+                    if ui.button(self.t(Text::McCancel)).clicked() {
+                        cancel = true;
+                    }
+                });
+                if let Some(e) = self.dialog_error {
+                    ui.colored_label(col(self.theme.danger), e);
+                }
+            });
+        self.dialog_error = error;
+        if cancel {
+            self.dialog_error = None;
+            return None;
+        }
+        match done {
+            Some(Chosen::File(p)) => {
+                self.dialog_error = None;
+                if mode == Mode::Open {
+                    self.open(&p);
+                } else if let Err(e) = self.save_program(&p) {
+                    self.session.log.push(e);
+                }
+                None
+            }
+            Some(Chosen::Overwrite(p)) => {
+                if mode == Mode::Open {
+                    self.open(&p);
+                    None
+                } else {
+                    Some(Win::Replace(b, p))
+                }
+            }
+            None => Some(if mode == Mode::Open {
+                Win::Open(b)
+            } else {
+                Win::Save(b)
+            }),
+        }
+    }
+
+    /// The settings: the sections on the left like the tree of PlanetCNC, the section on the right, Ok and Cancel.
+    fn settings_window(&mut self, ctx: &egui::Context, mut d: Box<Draft>) -> Option<Win> {
+        let mut ok = false;
+        let mut cancel = false;
+        self.window(self.t(Text::SettingsTitle))
+            .default_size([620.0, 460.0])
+            .show(ctx, |ui| {
+                ui.horizontal_top(|ui| {
+                    ui.vertical(|ui| {
+                        ui.set_width(150.0);
+                        for (i, n) in [
+                            Text::McSecGeneral,
+                            Text::McSecInterface,
+                            Text::McSecAxes,
+                            Text::McSecJog,
+                        ]
+                        .into_iter()
+                        .enumerate()
+                        {
+                            if ui.selectable_label(d.section == i, self.t(n)).clicked() {
+                                d.section = i;
+                            }
+                        }
+                    });
+                    ui.add_space(8.0);
+                    ui.vertical(|ui| {
+                        ui.set_min_width(420.0);
+                        match d.section {
+                            0 => {
+                                ui.label(
+                                    RichText::new(self.t(Text::Units).to_uppercase())
+                                        .color(col(self.theme.dim)),
+                                );
+                                ui.radio_value(&mut d.s.inches, false, self.t(Text::UnitMm));
+                                ui.radio_value(&mut d.s.inches, true, self.t(Text::McUnitInch));
+                                ui.add_space(8.0);
+                                ui.horizontal(|ui| {
+                                    ui.label(self.t(Text::McSpindle));
+                                    ui.add(
+                                        egui::DragValue::new(&mut d.s.spindle_rpm)
+                                            .range(0.0..=1_000_000.0)
+                                            .speed(100.0)
+                                            .suffix(" rpm"),
+                                    );
+                                });
+                                ui.checkbox(&mut d.s.show_rapids, self.t(Text::McShowRapids));
+                            }
+                            1 => {
+                                ui.label(
+                                    RichText::new(self.t(Text::Language).to_uppercase())
+                                        .color(col(self.theme.dim)),
+                                );
+                                ui.horizontal_wrapped(|ui| {
+                                    for l in Lang::ALL {
+                                        ui.selectable_value(&mut d.s.lang, l, lang_name(l));
+                                    }
+                                });
+                                ui.add_space(8.0);
+                                ui.label(
+                                    RichText::new(self.t(Text::ThemeLabel).to_uppercase())
+                                        .color(col(self.theme.dim)),
+                                );
+                                egui::Grid::new("themes")
+                                    .num_columns(2)
+                                    .spacing([10.0, 6.0])
+                                    .show(ui, |ui| {
+                                        for (i, id) in ThemeId::ALL.into_iter().enumerate() {
+                                            ui.selectable_value(
+                                                &mut d.s.theme,
+                                                id,
+                                                tr(d.s.lang, id.text()),
+                                            );
+                                            if i % 2 == 1 {
+                                                ui.end_row();
+                                            }
+                                        }
+                                    });
+                                ui.add_space(8.0);
+                                ui.checkbox(&mut d.s.show_buttons, self.t(Text::McShowButtons));
+                                ui.checkbox(&mut d.s.show_program, self.t(Text::McShowProgram));
+                                ui.checkbox(&mut d.s.show_log, self.t(Text::McShowLog));
+                            }
+                            2 => {
+                                ui.label(
+                                    RichText::new(self.t(Text::McLimits))
+                                        .color(col(self.theme.dim)),
+                                );
+                                egui::Grid::new("limits")
+                                    .num_columns(3)
+                                    .spacing([10.0, 6.0])
+                                    .show(ui, |ui| {
+                                        for (i, n) in ["X", "Y", "Z"].iter().enumerate() {
+                                            ui.label(*n);
+                                            ui.add(
+                                                egui::DragValue::new(&mut d.s.travel[i].0)
+                                                    .speed(1.0)
+                                                    .range(-100_000.0..=100_000.0),
+                                            );
+                                            ui.add(
+                                                egui::DragValue::new(&mut d.s.travel[i].1)
+                                                    .speed(1.0)
+                                                    .range(-100_000.0..=100_000.0),
+                                            );
+                                            ui.end_row();
+                                        }
+                                    });
+                                for t in &mut d.s.travel {
+                                    if t.1 <= t.0 {
+                                        t.1 = t.0 + 1.0;
+                                    }
+                                }
+                            }
+                            _ => {
+                                ui.label(self.t(Text::McDefaultStep));
+                                ui.horizontal(|ui| {
+                                    for s in STEPS {
+                                        ui.selectable_value(&mut d.s.step_mm, s, format!("{s}"));
+                                    }
+                                });
+                                ui.add_space(8.0);
+                                ui.horizontal(|ui| {
+                                    ui.label(self.t(Text::McDefaultFeed));
+                                    ui.add(
+                                        egui::DragValue::new(&mut d.s.feed_mm_min)
+                                            .range(1.0..=100_000.0)
+                                            .speed(10.0),
+                                    );
+                                });
+                            }
+                        }
+                    });
+                });
+                ui.separator();
+                ui.horizontal(|ui| {
+                    if ui.button(self.t(Text::Ok)).clicked() {
+                        ok = true;
+                    }
+                    if ui.button(self.t(Text::McCancel)).clicked() {
+                        cancel = true;
+                    }
+                });
+            });
+        if ok {
+            let before = self.settings.clone();
+            self.settings = d.s;
+            // what the operator chose for the jog is the jog now
+            if (self.settings.step_mm, self.settings.feed_mm_min)
+                != (before.step_mm, before.feed_mm_min)
+            {
+                self.session.step_mm = self.settings.step_mm;
+                self.session.feed_mm_min = self.settings.feed_mm_min;
+            }
+            self.apply_settings();
+            self.save_settings();
+            return None;
+        }
+        if cancel {
+            return None;
+        }
+        Some(Win::Settings(d))
+    }
+}
+
+/// The name of a language, in that language.
+pub(super) fn lang_name(l: Lang) -> &'static str {
+    match l {
+        Lang::En => "English",
+        Lang::Es => "Español",
+        Lang::It => "Italiano",
+        Lang::De => "Deutsch",
+        Lang::Fr => "Français",
+        Lang::Pt => "Português",
+        Lang::Zh => "中文",
+        Lang::Ja => "日本語",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn app() -> App {
+        App::new(&Options::default())
+    }
+
+    fn work_folder(tag: &str) -> PathBuf {
+        let d =
+            std::env::temp_dir().join(format!("motioncnc-dialogs-{tag}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    #[test]
+    fn a_program_opened_is_a_recent_one_and_a_program_saved_comes_back_the_same() {
+        let d = work_folder("save");
+        let a_path = d.join("a.nc");
+        std::fs::write(&a_path, "G21 G90\nG0 X10 Y10\nG1 X20 F300\n").unwrap();
+        let mut a = app();
+        a.open(&a_path);
+        assert_eq!(a.session.program.len(), 3);
+        assert_eq!(a.path_toolpath.len(), 2);
+        assert_eq!(a.settings.recent[0], a_path.to_string_lossy());
+        assert_eq!(a.settings.last_dir, d.display().to_string());
+        // saved under another name, it reads back as the same program
+        let b_path = d.join("b.nc");
+        a.save_program(&b_path).unwrap();
+        let mut b = app();
+        b.open(&b_path);
+        assert_eq!(b.session.program, a.session.program);
+        assert_eq!(a.path, b_path.display().to_string());
+        // the save window goes to the folder of the program and proposes its name
+        a.open_window("save");
+        match a.win.as_ref() {
+            Some(Win::Save(br)) => {
+                assert_eq!(br.dir.as_deref(), Some(d.as_path()));
+                assert_eq!(br.name_text, "b.nc");
+            }
+            _ => panic!("the save window did not open"),
+        }
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn the_settings_reach_the_machine_the_language_and_the_theme() {
+        let mut a = app();
+        a.settings.travel[0] = (0.0, 100.0);
+        a.settings.lang = Lang::De;
+        a.settings.theme = ThemeId::Paper;
+        a.apply_settings();
+        assert_eq!((a.lang, a.theme.id), (Lang::De, ThemeId::Paper));
+        a.session.mdi("G0 X150");
+        assert!(a.session.alarm(), "the limit did not reach the machine");
+        // the windows open by their names
+        for (name, ok) in [
+            ("settings", true),
+            ("open", true),
+            ("about", true),
+            ("edit", true),
+            ("nothing", false),
+        ] {
+            a.win = None;
+            a.open_window(name);
+            assert_eq!(a.win.is_some(), ok, "{name}");
+        }
+    }
+}

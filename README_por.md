@@ -14,12 +14,12 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-22-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** um programa em Rust com uma janela (`motioncnc`) que comanda uma máquina **simulada**: mostra a posição da máquina (peça e máquina), move-a à mão com um teclado de jog, põe o zero, faz a referência, aceita os comandos escritos pelo operador, executa um programa G-code linha a linha (com pausa, paragem e paragem de emergência), desenha a trajetória do programa na mesa com as linhas feitas marcadas e pára no que o controlador recusa. A janela fala oito idiomas e tem cinco temas. A interface de controladores (`eh3d-controller`, no EH3D-COMMON) tem o GRBL escrito contra uma linha simulada e lista as outras famílias como ainda sem controlador. 12 testes correm num computador. **Nada aqui foi executado numa máquina real**, não se abre nenhuma porta série nem ligação de rede, e os arcos e os outros códigos o simulador nem os desenha nem os executa.
+**Verificação de honestidade - o que funciona hoje:** um programa em Rust com uma janela (`motioncnc`) que comanda uma máquina **simulada**: mostra a posição da máquina (peça e máquina), move-a à mão com um teclado de jog, põe o zero, faz a referência, aceita os comandos escritos pelo operador, executa um programa G-code linha a linha (com pausa, paragem e paragem de emergência), desenha a trajetória do programa na mesa com as linhas feitas marcadas e pára no que o controlador recusa. A janela fala oito idiomas e tem cinco temas. A interface de controladores (`eh3d-controller`, no EH3D-COMMON) tem o GRBL escrito contra uma linha simulada e lista as outras famílias como ainda sem controlador. 22 testes correm num computador. **Nada aqui foi executado numa máquina real**, não se abre nenhuma porta série nem ligação de rede, e os arcos e os outros códigos o simulador nem os desenha nem os executa.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Versão | `0.0.3` |
 | Maturidade | Estrutura inicial |
-| Testes | 12 |
+| Testes | 22 |
 | Tecnologias | Rust |
 | Em hardware real | Não: comanda apenas uma máquina simulada |
 
@@ -48,7 +48,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. Esc
 | Biblioteca base | 🟡 | Um crate de Rust que reexporta `scene`, `texts` e `theme` do `eh3d-view` com o nome deste programa; precisa da pasta do EH3D-COMMON ao lado. |
 | Cena e vistas | 🟡 | Escrita e testada no EH3D-COMMON; a janela deste programa desenha a trajetória de um programa na mesa e a posição da ferramenta (vista num computador). |
 | Temas e textos | 🟡 | Cinco temas e as palavras da interface em oito idiomas, vistos na janela deste programa. |
-| Testes | 🟡 | Passam 12 testes num computador (`cargo test --features gui`): a sessão (jog, zero, referência, um programa, pausa, alarme, paragem de emergência), a trajetória de um programa e a linha de comandos; o controlador simulado é testado no EH3D-COMMON. |
+| Testes | 🟡 | Passam 22 testes num computador (`cargo test --features gui`): a sessão (jog, zero, referência, um programa, pausa, alarme, paragem de emergência), a trajetória de um programa e a linha de comandos; o controlador simulado é testado no EH3D-COMMON. |
 | Janela e jog | 🟡 | Funciona num computador com o controlador simulado: posição, teclado de jog, passos, avanço, referência, zero, desbloqueio, uma linha de comandos e um registo; sem máquina real. |
 | Controlo de máquina | 🟠 | Só o simulador: um programa corre linha a linha com pausa, paragem e paragem de emergência; ainda não se liga nenhum controlador real a partir daqui. |
 | Documentação | 🟡 | README em oito idiomas, as duas imagens, três programas de exemplo e o changelog. |
@@ -60,6 +60,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. Esc
 * A **trajetória de um programa** (`src/gcode.rs`): os movimentos retos (`G0`, `G1`, absolutos ou relativos, em mm ou polegadas) desenhados antes de executar o programa; os arcos não se desenham.
 * O **controlador simulado** (`eh3d_controller::sim`, no EH3D-COMMON): uma máquina em memória com limites de curso que dão alarme; as famílias de controladores do mercado estão listadas em `eh3d-controller`, o GRBL é a primeira escrita e as outras aparecem como ainda sem controlador.
 * Os **temas e as palavras** de `eh3d-view`: Forge (o predefinido), Neon Arcade, Glass Pro, o cinzento clássico do Windows e um que segue o Windows, e a interface em inglês, espanhol, italiano, alemão, francês, português, chinês e japonês. O que será: um programa para furar, fresar e fazer CNC 2D e 3D sobre os motores do EH3D-DRILLPRO e do EH3D-ROUTEPRO; essa parte ainda não existe.
+* Os **menus, as definições e os ficheiros**: os menus Ficheiro, Ver, Programa, Máquina e Ajuda com o que o PlanetCNC tem (abrir, recentes, guardar, editar, os zeros, as posições guardadas, o fuso e o refrigerante); uma janela de definições (unidades, idioma, onze temas, limites de curso, jog) que se recorda entre execuções; e as janelas Abrir e Guardar da suite (`eh3d-filedialog`: locais, ordenação, filtros, a extensão de um ficheiro guardado e a pergunta antes de substituir).
 
 ## 🧩 Papel no EH3D
 
@@ -82,16 +83,28 @@ Como as partes se encaixam: quem o vai usar, o que este repositório contém e e
 <p align="center"><em>Um programa em curso na máquina simulada: as linhas feitas a verde, a linha atual realçada, a trajetória desenhada na mesa e a ferramenta onde está a máquina.</em></p>
 
 <p align="center">
-  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+  <img src="images/screenshots/spiral-neon.png" alt="Midnight theme" width="100%">
 </p>
 
-<p align="center"><em>O tema Neon Arcade, com um programa longo já terminado.</em></p>
+<p align="center"><em>O tema Meia-noite, com um programa longo já terminado.</em></p>
 
 <p align="center">
-  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+  <img src="images/screenshots/square-german.png" alt="German interface, light theme" width="100%">
 </p>
 
-<p align="center"><em>A interface em alemão com o tema Glass: cada palavra da janela segue o idioma.</em></p>
+<p align="center"><em>A interface em alemão com o tema claro Papel: cada palavra da janela segue o idioma.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/settings-window.png" alt="settings window" width="100%">
+</p>
+
+<p align="center"><em>A janela de definições, com as secções à esquerda como a árvore do PlanetCNC: o idioma, os onze temas e o que se mostra.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/open-window.png" alt="Open window" width="100%">
+</p>
+
+<p align="center"><em>A janela Abrir da suite: locais, recentes, a lista da pasta com datas e tamanhos, o nome e o tipo.</em></p>
 
 ## 🔒 Segurança e proteção
 
@@ -137,7 +150,9 @@ EH3D-MOTIONCNC/
 │   ├── session.rs                               o que se faz com um controlador: jog, zero, referência, um programa linha a linha, pausa, paragem, alarmes
 │   ├── gcode.rs                                 os movimentos retos de um programa G-code, para desenhar a sua trajetória
 │   ├── cli.rs                                   a linha de comandos: o ficheiro, o idioma, o tema e as opções de imagem
-│   └── bin/motioncnc.rs                         o programa que abre a janela
+│   ├── bin/motioncnc.rs                         o programa que abre a janela
+│   ├── settings.rs                              o que se recorda entre execuções
+│   └── gui/dialogs.rs                           menus, definições, Abrir, Guardar, editor
 ├── examples/                                    três programas G-code de exemplo, de um quadrado a uma espiral longa
 ├── tools/                                       verificação de CI, do README e ferramentas de imagens
 ├── docs/                                        as fontes das imagens de Arquitetura e Estrutura do repositório

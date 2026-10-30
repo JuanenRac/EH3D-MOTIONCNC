@@ -381,7 +381,7 @@ impl App {
                 self.session.go_zero_z();
             }
             ui.separator();
-            if self.icon_button(ui, Icon::Home, self.t(Text::McHome), self.t(Text::McHome)) {
+            if self.icon_button(ui, Icon::Home, "", self.t(Text::McHome)) {
                 self.session.home();
             }
         });
@@ -572,6 +572,9 @@ impl App {
                     .range(1.0..=20000.0)
                     .speed(10.0),
             );
+            if ui.button(self.t(Text::McUnlock)).clicked() {
+                self.session.unlock();
+            }
         });
         let size = Vec2::new(52.0, 38.0);
         let mut pad = |ui: &mut egui::Ui, label: &str, axis: usize, dir: f64| {
@@ -602,10 +605,6 @@ impl App {
             pad(ui, "A-", 3, -1.0);
             ui.end_row();
         });
-        ui.add_space(6.0);
-        if ui.button(self.t(Text::McUnlock)).clicked() {
-            self.session.unlock();
-        }
     }
 
     fn right(&mut self, ui: &mut egui::Ui) {

@@ -4,9 +4,13 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.0.3] - The first window: a simulated machine with jog, zero, home, commands and a G-code program with its path, in eight languages and five themes
+
+- **Screenshots in the README:** three pictures of the window (a program running, a second theme and the German interface) in all the eight languages of the README.
 - **Documentation, scripts and examples for the window:** the README in eight languages says what runs today (a simulated machine), the build, test and run scripts build and open the window, the CI builds and tests it with the window feature, and three sample G-code programs (a square, a frame and a pocket, a long spiral) are in `examples/`, packaged with the binaries by a release workflow for Windows (64 and 32 bits), Linux and macOS.
 - **The session and the path of a program:** `session` runs a program on any controller of `eh3d-controller` (jog, zero, home, MDI, pause, stop, alarm) and `gcode` draws the straight moves of a program; both are tested on the simulated controller (10 tests), and the command line has its own (2).
 - **A window with the simulated controller:** `motioncnc` shows the position of the machine (work and machine), a jog pad with its steps and feed, home, zero and unlock, the emergency stop, a line of commands (MDI) with its log, and a G-code program with its path drawn on the table, the lines done marked and the tool where the machine is; it speaks the eight languages and wears the themes of the suite. The program is run line by line, can be paused and stopped, and a line the controller refuses stops it where it is.
+
 ## [0.0.2] - The scene moved to the shared view crate, the repository scaffolding in eight languages and the run, build and test scripts
 
 - **A lighter debug build:** the `dev` profile keeps the file and line of a panic (`debug = "line-tables-only"`) but not the full debug symbols, so the `target` folder of a test run is about a tenth of its size.

@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
   <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
@@ -29,7 +29,7 @@
 
 | | |
 |---|---|
-| Version | `0.0.2` |
+| Version | `0.0.3` |
 | Maturité | Échafaudage |
 | Tests | 12 |
 | Pile technique | Rust |
@@ -72,6 +72,26 @@ EH3D-MOTIONCNC est le programme de commande de machine d'EH3D, qui fonctionne au
 </p>
 
 Comment les parties s'assemblent : qui l'utilisera, ce que contient ce dépôt et sur quoi il s'appuie. L'image est dessinée à partir de `docs/architecture.json`, vérifiée par rapport au code, et marque comme futur ce qui est futur.
+
+## 🖼️ Captures d'écran
+
+<p align="center">
+  <img src="images/screenshots/program-running.png" alt="a program running" width="100%">
+</p>
+
+<p align="center"><em>Un programme en cours sur la machine simulée : les lignes faites en vert, la ligne en cours en clair, la trajectoire dessinée sur la table et l'outil là où est la machine.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+</p>
+
+<p align="center"><em>Le thème Neon Arcade, avec un long programme terminé.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+</p>
+
+<p align="center"><em>L'interface en allemand avec le thème Glass : chaque mot de la fenêtre suit la langue.</em></p>
 
 ## 🔒 Sécurité et protection
 
@@ -122,7 +142,7 @@ EH3D-MOTIONCNC/
 ├── tools/                                       contrôle de CI, du README et outils d'images
 ├── docs/                                        les sources des images d'Architecture et de Structure du dépôt
 ├── .github/                                     workflow de CI, modèles d'issues et de pull requests
-├── images/                                      bannière et images d'Architecture et de Structure du dépôt
+├── images/                                      bannière, les deux images et les captures d'écran
 ├── build.sh build.bat                           compilent la bibliothèque
 ├── run.sh run.bat                               indiquent qu'il n'y a pas encore de programme et lancent les tests
 ├── eh3d.project.json                            manifeste : version, rôle, maturité et commande de compilation

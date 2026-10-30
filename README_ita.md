@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
   <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
@@ -29,7 +29,7 @@
 
 | | |
 |---|---|
-| Versione | `0.0.2` |
+| Versione | `0.0.3` |
 | Maturità | Impalcatura |
 | Test | 12 |
 | Stack tecnologico | Rust |
@@ -72,6 +72,26 @@ EH3D-MOTIONCNC è il programma di controllo macchina di EH3D, oggi funzionante s
 </p>
 
 Come si incastrano le parti: chi lo userà, cosa contiene questo repository e su cosa si appoggia. L'immagine è disegnata da `docs/architecture.json`, verificata rispetto al codice e segna come futuro ciò che è futuro.
+
+## 🖼️ Schermate
+
+<p align="center">
+  <img src="images/screenshots/program-running.png" alt="a program running" width="100%">
+</p>
+
+<p align="center"><em>Un programma in corso sulla macchina simulata: le righe eseguite in verde, la riga attuale evidenziata, il percorso disegnato sul piano e l'utensile dove si trova la macchina.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+</p>
+
+<p align="center"><em>Il tema Neon Arcade, con un programma lungo terminato.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+</p>
+
+<p align="center"><em>L'interfaccia in tedesco con il tema Glass: ogni parola della finestra segue la lingua.</em></p>
 
 ## 🔒 Sicurezza e protezione
 
@@ -122,7 +142,7 @@ EH3D-MOTIONCNC/
 ├── tools/                                       controllo di CI, del README e strumenti per le immagini
 ├── docs/                                        le sorgenti delle immagini di Architettura e Struttura del repository
 ├── .github/                                     workflow di CI, modelli di issue e pull request
-├── images/                                      banner e le immagini di Architettura e Struttura del repository
+├── images/                                      banner, le due immagini e le schermate
 ├── build.sh build.bat                           compilano la libreria
 ├── run.sh run.bat                               avvisano che non c'è ancora un programma ed eseguono i test
 ├── eh3d.project.json                            manifesto: versione, ruolo, maturità e comando di compilazione

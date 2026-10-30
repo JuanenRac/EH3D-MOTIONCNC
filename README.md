@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
   <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
@@ -29,7 +29,7 @@
 
 | | |
 |---|---|
-| Version | `0.0.2` |
+| Version | `0.0.3` |
 | Maturity | Scaffolding |
 | Tests | 12 |
 | Stack | Rust |
@@ -72,6 +72,26 @@ EH3D-MOTIONCNC is the machine-control program of EH3D, today working on a simula
 </p>
 
 How the parts fit together: who will use it, what this repository holds and what it relies on. The picture is drawn from `docs/architecture.json`, is checked against the code and marks what is future as future.
+
+## 🖼️ Screenshots
+
+<p align="center">
+  <img src="images/screenshots/program-running.png" alt="a program running" width="100%">
+</p>
+
+<p align="center"><em>A program running on the simulated machine: the lines done are green, the line that goes now is bright, the path is drawn on the table and the tool is where the machine is.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+</p>
+
+<p align="center"><em>The Neon Arcade theme, with a long program that has finished.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+</p>
+
+<p align="center"><em>The interface in German with the Glass theme: every word of the window follows the language.</em></p>
 
 ## 🔒 Security & Safety
 
@@ -122,7 +142,7 @@ EH3D-MOTIONCNC/
 ├── tools/                                       CI check, README check and the picture tools
 ├── docs/                                        the sources of the Architecture and Repository Structure pictures
 ├── .github/                                     CI workflow, issue and pull-request templates
-├── images/                                      banner and the Architecture and Repository Structure pictures
+├── images/                                      banner, the two pictures and the screenshots
 ├── build.sh build.bat                           build the library
 ├── run.sh run.bat                               say that there is no program yet and run the tests
 ├── eh3d.project.json                            manifest: version, role, maturity and build command

@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
   <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
@@ -29,7 +29,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.0.2` |
+| 版本 | `0.0.3` |
 | 成熟度 | 脚手架 |
 | 测试 | 12 |
 | 技术栈 | Rust |
@@ -72,6 +72,26 @@ EH3D-MOTIONCNC 是 EH3D 的机床控制程序，目前运行在模拟机床上�
 </p>
 
 各部分如何配合：谁将使用它、本仓库包含什么、它依赖什么。图片由 `docs/architecture.json` 绘制，并与代码核对，未来的内容标为未来。
+
+## 🖼️ 屏幕截图
+
+<p align="center">
+  <img src="images/screenshots/program-running.png" alt="a program running" width="100%">
+</p>
+
+<p align="center"><em>程序在模拟机床上运行：已完成的行为绿色，当前行高亮，路径绘制在工作台上，刀具位于机床所在位置。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+</p>
+
+<p align="center"><em>Neon Arcade 主题，一个已运行完的长程序。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+</p>
+
+<p align="center"><em>使用 Glass 主题的德语界面：窗口中的每个词都跟随语言。</em></p>
 
 ## 🔒 安全与防护
 
@@ -122,7 +142,7 @@ EH3D-MOTIONCNC/
 ├── tools/                                       CI 检查、README 检查和图片工具
 ├── docs/                                        架构图和仓库结构图的源文件
 ├── .github/                                     CI 工作流、Issue 和 PR 模板
-├── images/                                      横幅图以及架构和仓库结构图片
+├── images/                                      横幅图、两张图片和屏幕截图
 ├── build.sh build.bat                           构建库
 ├── run.sh run.bat                               提示尚无程序并运行测试
 ├── eh3d.project.json                            清单：版本、角色、成熟度和构建命令

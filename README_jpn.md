@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
   <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
@@ -29,7 +29,7 @@
 
 | | |
 |---|---|
-| バージョン | `0.0.2` |
+| バージョン | `0.0.3` |
 | 成熟度 | 足場 |
 | テスト | 12 |
 | 技術スタック | Rust |
@@ -72,6 +72,26 @@ EH3D-MOTIONCNC は EH3D のマシン制御プログラムで、現在は模擬�
 </p>
 
 各部分の組み合わせ：誰が使うのか、このリポジトリに何があるのか、何に依存するのか。図は `docs/architecture.json` から描かれ、コードと照合され、将来のものは将来として示されます。
+
+## 🖼️ スクリーンショット
+
+<p align="center">
+  <img src="images/screenshots/program-running.png" alt="a program running" width="100%">
+</p>
+
+<p align="center"><em>模擬マシンで実行中のプログラム：実行済みの行は緑、現在の行は明るく表示され、経路がテーブル上に描かれ、ツールはマシンのある位置にあります。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+</p>
+
+<p align="center"><em>Neon Arcade テーマと、実行が終わった長いプログラム。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+</p>
+
+<p align="center"><em>Glass テーマのドイツ語インターフェース：ウィンドウのすべての言葉が言語に従います。</em></p>
 
 ## 🔒 セキュリティと安全
 
@@ -122,7 +142,7 @@ EH3D-MOTIONCNC/
 ├── tools/                                       CI チェック、README チェック、図の生成ツール
 ├── docs/                                        アーキテクチャ図とリポジトリ構成図の元データ
 ├── .github/                                     CI ワークフロー、Issue と PR のテンプレート
-├── images/                                      バナーとアーキテクチャ・リポジトリ構成の図
+├── images/                                      バナー、2 つの図、スクリーンショット
 ├── build.sh build.bat                           ライブラリをビルド
 ├── run.sh run.bat                               まだプログラムがないことを表示し、テストを実行
 ├── eh3d.project.json                            マニフェスト：バージョン、役割、成熟度、ビルドコマンド

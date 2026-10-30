@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Stack-Rust-DEA584.svg" alt="Rust">
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
-  <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.0.3-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
   <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
@@ -29,7 +29,7 @@
 
 | | |
 |---|---|
-| Version | `0.0.2` |
+| Version | `0.0.3` |
 | Reifegrad | Gerüst |
 | Tests | 12 |
 | Technologie-Stack | Rust |
@@ -72,6 +72,26 @@ EH3D-MOTIONCNC ist das Maschinensteuerungsprogramm von EH3D, heute auf einer sim
 </p>
 
 Wie die Teile zusammenpassen: wer es nutzen wird, was dieses Repository enthält und worauf es sich stützt. Das Bild wird aus `docs/architecture.json` gezeichnet, gegen den Code geprüft und kennzeichnet Künftiges als künftig.
+
+## 🖼️ Screenshots
+
+<p align="center">
+  <img src="images/screenshots/program-running.png" alt="a program running" width="100%">
+</p>
+
+<p align="center"><em>Ein Programm läuft auf der simulierten Maschine: die erledigten Zeilen sind grün, die aktuelle Zeile hell, die Bahn ist auf den Tisch gezeichnet und das Werkzeug steht, wo die Maschine ist.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/spiral-neon.png" alt="Neon Arcade theme" width="100%">
+</p>
+
+<p align="center"><em>Das Thema Neon Arcade mit einem langen, beendeten Programm.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/square-german.png" alt="German interface" width="100%">
+</p>
+
+<p align="center"><em>Die Oberfläche auf Deutsch mit dem Thema Glass: jedes Wort des Fensters folgt der Sprache.</em></p>
 
 ## 🔒 Sicherheit und Schutz
 
@@ -122,7 +142,7 @@ EH3D-MOTIONCNC/
 ├── tools/                                       CI-Prüfung, README-Prüfung und die Bild-Werkzeuge
 ├── docs/                                        die Quellen der Bilder von Architektur und Repository-Struktur
 ├── .github/                                     CI-Workflow, Vorlagen für Issues und Pull Requests
-├── images/                                      Banner und die Bilder von Architektur und Repository-Struktur
+├── images/                                      Banner, die beiden Bilder und die Screenshots
 ├── build.sh build.bat                           bauen die Bibliothek
 ├── run.sh run.bat                               melden, dass es noch kein Programm gibt, und führen die Tests aus
 ├── eh3d.project.json                            Manifest: Version, Rolle, Reifegrad und Build-Befehl

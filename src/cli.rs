@@ -18,6 +18,10 @@ pub struct Options {
     pub start: bool,
     /// A window to open at the start (`--window settings|open|save|edit|about`): for the pictures.
     pub window: Option<String>,
+    /// Drives GRBL on a serial port instead of the simulator (`--grbl PORT[@BAUD]`).
+    pub grbl: Option<String>,
+    /// Lists the serial ports and leaves (`--ports`).
+    pub ports: bool,
 }
 
 impl Options {
@@ -47,6 +51,8 @@ impl Options {
                 }
                 "--start" => o.start = true,
                 "--window" => o.window = Some(value("--window")?),
+                "--grbl" => o.grbl = Some(value("--grbl")?),
+                "--ports" => o.ports = true,
                 other if !other.starts_with("--") && o.file.is_none() => {
                     o.file = Some(PathBuf::from(other))
                 }
@@ -78,6 +84,9 @@ mod tests {
         assert_eq!(o.file, Some(PathBuf::from("job.nc")));
         assert_eq!(o.shot, Some(PathBuf::from("a.png")));
         assert_eq!(parse("").unwrap().wait, 6);
+        let g = parse("--grbl COM3@250000 --ports").unwrap();
+        assert_eq!((g.grbl.as_deref(), g.ports), (Some("COM3@250000"), true));
+        assert!(parse("--grbl").is_err());
     }
 
     #[test]

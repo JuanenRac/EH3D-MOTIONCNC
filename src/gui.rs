@@ -146,6 +146,11 @@ pub struct App {
 
 impl App {
     pub fn new(o: &Options) -> App {
+        App::with_controller(o, Box::new(SimController::new()))
+    }
+
+    /// The window over the controller that is given (the simulator, or the one the options asked for).
+    pub fn with_controller(o: &Options, controller: Box<dyn eh3d_controller::Controller>) -> App {
         let path = settings_path();
         let mut settings = Settings::load(&path);
         if let Some(l) = o.lang {
@@ -154,7 +159,7 @@ impl App {
         if let Some(th) = o.theme {
             settings.theme = th;
         }
-        let mut session = Session::new(Box::new(SimController::new()));
+        let mut session = Session::new(controller);
         session.step_mm = settings.step_mm;
         session.feed_mm_min = settings.feed_mm_min;
         session.set_travel(settings.travel);
@@ -934,7 +939,18 @@ impl eframe::App for App {
 }
 
 pub fn run(o: &Options) -> eframe::Result {
-    let app = App::new(o);
+    if o.ports {
+        print!("{}", crate::link::ports_text());
+        return Ok(());
+    }
+    let controller = match crate::link::controller_for(o) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("motioncnc: {e}");
+            std::process::exit(2);
+        }
+    };
+    let app = App::with_controller(o, controller);
     let size = if o.shot.is_some() {
         Vec2::new(1400.0, 800.0)
     } else {

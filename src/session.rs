@@ -2,7 +2,9 @@
 //! program one line at a time that can be paused, stopped and cut by the emergency stop. It knows nothing of the window, so it is tested
 //! on the simulated controller.
 
-use eh3d_controller::{Command, Controller, Error, State, Status};
+use eh3d_controller::{Command, Controller, Error, State, Status, AXES};
+
+use crate::gcode::Modal;
 
 /// The jog steps offered, in mm.
 pub const STEPS: [f64; 5] = [0.01, 0.1, 1.0, 10.0, 100.0];
@@ -19,6 +21,10 @@ pub struct Session {
     pub log: Vec<String>,
     pub step_mm: f64,
     pub feed_mm_min: f64,
+    /// The codes in force, from the lines the controller took.
+    pub modal: Modal,
+    /// The zero of the operator, apart from the work zero: a position of the machine the operator chose to measure from.
+    pub operator_zero: [f64; AXES],
 }
 
 impl Session {
@@ -33,6 +39,8 @@ impl Session {
             log: Vec::new(),
             step_mm: 1.0,
             feed_mm_min: 600.0,
+            modal: Modal::default(),
+            operator_zero: [0.0; AXES],
         };
         s.refresh();
         s
@@ -88,6 +96,58 @@ impl Session {
         self.refresh();
     }
 
+    /// Sends a line of the program's own making (a move to a stored position, to the zero) and keeps what it sets.
+    fn own_line(&mut self, what: &str, line: &str) {
+        match self.controller.send_line(line) {
+            Ok(()) => self.modal.apply(line),
+            Err(e) => self.failed(what, e),
+        }
+        self.refresh();
+    }
+
+    /// Goes to the position stored with `G28` (the first one).
+    pub fn go_g28(&mut self) {
+        self.own_line("G28", "G28");
+    }
+
+    /// Goes to the position stored with `G30` (the second one).
+    pub fn go_g30(&mut self) {
+        self.own_line("G30", "G30");
+    }
+
+    /// Goes to the work zero in X and Y.
+    pub fn go_zero_xy(&mut self) {
+        self.own_line("go to zero", "G90 G0 X0 Y0");
+    }
+
+    /// Goes to the work zero in Z.
+    pub fn go_zero_z(&mut self) {
+        self.own_line("go to zero", "G90 G0 Z0");
+    }
+
+    /// Makes the work position here zero on these axes only.
+    pub fn zero_axes(&mut self, axes: &[usize]) {
+        self.order("zero", Command::ZeroWork(axes.to_vec()));
+    }
+
+    /// Makes the operator's position here zero on these axes.
+    pub fn zero_operator(&mut self, axes: &[usize]) {
+        for &a in axes {
+            if a < AXES {
+                self.operator_zero[a] = self.status.machine_mm[a];
+            }
+        }
+    }
+
+    /// Where the machine is measured from the operator's zero.
+    pub fn operator_mm(&self) -> [f64; AXES] {
+        let mut o = [0.0; AXES];
+        for (i, v) in o.iter_mut().enumerate() {
+            *v = self.status.machine_mm[i] - self.operator_zero[i];
+        }
+        o
+    }
+
     pub fn home(&mut self) {
         self.order("home", Command::Home(Vec::new()));
     }
@@ -117,7 +177,10 @@ impl Session {
         }
         self.say(format!("> {line}"));
         match self.controller.send_line(line) {
-            Ok(()) => self.say("ok"),
+            Ok(()) => {
+                self.modal.apply(line);
+                self.say("ok")
+            }
             Err(e) => self.failed("mdi", e),
         }
         self.refresh();
@@ -179,6 +242,7 @@ impl Session {
                     self.failed(&format!("line {n} ({trimmed})"), e);
                     break;
                 }
+                self.modal.apply(trimmed);
             }
             self.next += 1;
             sent += 1;
@@ -282,6 +346,43 @@ mod tests {
         s.mdi("G0 X7");
         assert_eq!(s.status.machine_mm[0], 7.0);
         assert!(s.log.iter().any(|l| l == "> G0 X7"));
+    }
+
+    #[test]
+    fn the_stored_positions_the_axis_zero_and_the_operator_zero_work_on_their_own() {
+        let mut s = session();
+        s.mdi("G0 X30 Y40 Z-5");
+        s.zero_axes(&[0]);
+        s.mdi("G0 X50");
+        assert_eq!((s.status.work_mm[0], s.status.work_mm[1]), (50.0, 40.0));
+        s.zero_operator(&[1]);
+        s.mdi("G0 Y60");
+        assert_eq!(s.operator_mm()[1], 20.0);
+        s.go_zero_xy();
+        assert_eq!((s.status.work_mm[0], s.status.work_mm[1]), (0.0, 0.0));
+        s.go_g28();
+        assert_eq!(s.status.machine_mm[2], 50.0);
+        s.go_zero_z();
+        assert_eq!(s.status.work_mm[2], 0.0);
+    }
+
+    #[test]
+    fn the_codes_in_force_come_from_what_the_controller_took() {
+        let mut s = session();
+        s.mdi("G91 M3 S500");
+        assert_eq!(s.modal.m_codes()[0], "M3");
+        assert!(s.modal.g_codes().contains(&"G91".to_string()));
+        s.load(
+            "G90
+M5",
+        );
+        s.start();
+        s.pump(5);
+        assert!(s.modal.g_codes().contains(&"G90".to_string()));
+        assert_eq!(s.modal.m_codes()[0], "M5");
+        // a refused line changes nothing
+        s.mdi("G2 X1");
+        assert!(s.modal.g_codes().contains(&"G90".to_string()));
     }
 
     #[test]

@@ -95,6 +95,24 @@ fn save_png(img: &egui::ColorImage, path: &Path) -> std::io::Result<()> {
     w.write_image_data(&data).map_err(std::io::Error::other)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PosTab {
+    Work,
+    Machine,
+    Operator,
+    GCode,
+}
+
+/// The little pictures of the buttons and the rows.
+#[derive(Clone, Copy)]
+enum Icon {
+    Cross,
+    ToZero,
+    Home,
+    Gauge,
+    Spindle,
+}
+
 struct Shot {
     file: PathBuf,
     wait: u32,
@@ -106,7 +124,8 @@ pub struct App {
     lang: Lang,
     theme: Theme,
     visuals_for: Option<ThemeId>,
-    show_machine: bool,
+    pos_tab: PosTab,
+    info_tab: u8,
     mdi: String,
     path: String,
     path_toolpath: Vec<Segment>,
@@ -122,7 +141,8 @@ impl App {
             lang: o.lang.unwrap_or(Lang::En),
             theme: Theme::for_id(o.theme.unwrap_or(ThemeId::Forge)),
             visuals_for: None,
-            show_machine: false,
+            pos_tab: PosTab::Work,
+            info_tab: 0,
             mdi: String::new(),
             path: String::new(),
             path_toolpath: Vec::new(),
@@ -254,112 +274,338 @@ impl App {
         });
     }
 
+    /// The left panel, made like the one of PlanetCNC: a column of buttons for the zeros and the stored positions, the position with its
+    /// tabs (work, machine, operator, GCode), the speed and the spindle, the codes in force or the inputs and outputs, and the jog.
     fn left(&mut self, ui: &mut egui::Ui) {
-        egui::Panel::left("left").exact_size(350.0).show(ui, |ui| {
+        egui::Panel::left("icons").exact_size(74.0).show(ui, |ui| {
             ui.add_space(4.0);
-            ui.label(
-                RichText::new(self.t(Text::McPosition).to_uppercase())
-                    .color(col(self.theme.accent)),
-            );
-            let (work, machine) = (self.t(Text::McWork), self.t(Text::McMachine));
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.show_machine, false, work);
-                ui.selectable_value(&mut self.show_machine, true, machine);
-            });
-            let st = self.session.status.clone();
-            let values = if self.show_machine {
-                st.machine_mm
+            self.icon_column(ui);
+        });
+        egui::Panel::left("left").exact_size(360.0).show(ui, |ui| {
+            ui.add_space(4.0);
+            egui::ScrollArea::vertical()
+                .id_salt("leftscroll")
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    self.position_block(ui);
+                    ui.add_space(4.0);
+                    self.speed_rows(ui);
+                    ui.add_space(4.0);
+                    self.info_block(ui);
+                    ui.separator();
+                    self.jog_block(ui);
+                });
+        });
+    }
+
+    /// One square button of the column: an icon drawn with lines, a short caption under it and the explanation when the pointer rests on it.
+    fn icon_button(&self, ui: &mut egui::Ui, icon: Icon, caption: &str, tip: &str) -> bool {
+        let (rect, resp) = ui.allocate_exact_size(Vec2::new(56.0, 52.0), egui::Sense::click());
+        let t = &self.theme;
+        let p = ui.painter_at(rect);
+        let hot = resp.hovered();
+        p.rect_filled(
+            rect,
+            6.0,
+            if resp.is_pointer_button_down_on() {
+                alpha(col(t.accent), 110)
+            } else if hot {
+                alpha(col(t.accent), 50)
             } else {
-                st.work_mm
-            };
-            for (name, v) in ["X", "Y", "Z"].iter().zip(values) {
-                ui.horizontal(|ui| {
-                    ui.label(RichText::new(*name).size(26.0).color(col(self.theme.dim)));
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.label(
-                            RichText::new(format!("{v:9.3}"))
-                                .monospace()
-                                .size(30.0)
-                                .color(col(self.theme.accent)),
-                        );
+                col(t.panel_raised)
+            },
+        );
+        p.rect_stroke(
+            rect,
+            6.0,
+            Stroke::new(1.0, alpha(col(t.accent), if hot { 200 } else { 90 })),
+            StrokeKind::Inside,
+        );
+        let c = rect.center() - Vec2::new(0.0, 8.0);
+        let line = Stroke::new(1.8, col(t.text));
+        match icon {
+            Icon::Cross => {
+                p.circle_stroke(c, 9.0, line);
+                p.line_segment([c - Vec2::new(14.0, 0.0), c + Vec2::new(14.0, 0.0)], line);
+                p.line_segment([c - Vec2::new(0.0, 14.0), c + Vec2::new(0.0, 14.0)], line);
+            }
+            Icon::ToZero => {
+                p.line_segment([c - Vec2::new(14.0, 0.0), c + Vec2::new(8.0, 0.0)], line);
+                p.line_segment([c + Vec2::new(8.0, 0.0), c + Vec2::new(2.0, -6.0)], line);
+                p.line_segment([c + Vec2::new(8.0, 0.0), c + Vec2::new(2.0, 6.0)], line);
+                p.line_segment([c + Vec2::new(13.0, -9.0), c + Vec2::new(13.0, 9.0)], line);
+            }
+            Icon::Home => {
+                let top = c - Vec2::new(0.0, 12.0);
+                p.line_segment([top, c + Vec2::new(-13.0, -1.0)], line);
+                p.line_segment([top, c + Vec2::new(13.0, -1.0)], line);
+                p.rect_stroke(
+                    Rect::from_min_max(c + Vec2::new(-9.0, -1.0), c + Vec2::new(9.0, 11.0)),
+                    0.0,
+                    line,
+                    StrokeKind::Inside,
+                );
+            }
+            Icon::Gauge | Icon::Spindle => {}
+        }
+        p.text(
+            rect.center_bottom() - Vec2::new(0.0, 3.0),
+            Align2::CENTER_BOTTOM,
+            caption,
+            egui::FontId::proportional(11.0),
+            col(t.dim),
+        );
+        resp.on_hover_text(tip).clicked()
+    }
+
+    fn icon_column(&mut self, ui: &mut egui::Ui) {
+        ui.vertical(|ui| {
+            ui.spacing_mut().item_spacing.y = 6.0;
+            if self.icon_button(ui, Icon::Cross, "XYZ", self.t(Text::McZeroXyz)) {
+                self.session.zero_axes(&[0, 1, 2]);
+            }
+            if self.icon_button(ui, Icon::Cross, "XY", self.t(Text::McZeroXy)) {
+                self.session.zero_axes(&[0, 1]);
+            }
+            if self.icon_button(ui, Icon::Cross, "G28", self.t(Text::McGoG28)) {
+                self.session.go_g28();
+            }
+            if self.icon_button(ui, Icon::Cross, "G30", self.t(Text::McGoG30)) {
+                self.session.go_g30();
+            }
+            ui.separator();
+            if self.icon_button(ui, Icon::ToZero, "XY", self.t(Text::McGoZeroXy)) {
+                self.session.go_zero_xy();
+            }
+            if self.icon_button(ui, Icon::ToZero, "Z", self.t(Text::McGoZeroZ)) {
+                self.session.go_zero_z();
+            }
+            ui.separator();
+            if self.icon_button(ui, Icon::Home, self.t(Text::McHome), self.t(Text::McHome)) {
+                self.session.home();
+            }
+        });
+    }
+
+    /// The position: the tabs and the four axes, big. The letter of an axis sets its zero.
+    fn position_block(&mut self, ui: &mut egui::Ui) {
+        let (work, machine, operator, gcode) = (
+            self.t(Text::McWork),
+            self.t(Text::McMachine),
+            self.t(Text::McOperator),
+            self.t(Text::McGcodeTab),
+        );
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.pos_tab, PosTab::Work, work);
+            ui.selectable_value(&mut self.pos_tab, PosTab::Machine, machine);
+            ui.selectable_value(&mut self.pos_tab, PosTab::Operator, operator);
+            ui.selectable_value(&mut self.pos_tab, PosTab::GCode, gcode);
+        });
+        let st = self.session.status.clone();
+        let values = match self.pos_tab {
+            PosTab::Work | PosTab::GCode => st.work_mm,
+            PosTab::Machine => st.machine_mm,
+            PosTab::Operator => self.session.operator_mm(),
+        };
+        let tip = self.t(Text::McZeroAxis);
+        for (i, name) in ["X", "Y", "Z", "A"].iter().enumerate() {
+            egui::Frame::new()
+                .fill(col(self.theme.panel_raised))
+                .corner_radius(6.0)
+                .inner_margin(egui::Margin::symmetric(8, 3))
+                .show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    ui.horizontal(|ui| {
+                        let letter = egui::Button::new(
+                            RichText::new(*name).size(26.0).color(col(self.theme.dim)),
+                        )
+                        .frame(false)
+                        .min_size(Vec2::new(30.0, 34.0));
+                        if ui.add(letter).on_hover_text(tip).clicked() {
+                            match self.pos_tab {
+                                PosTab::Machine => {}
+                                PosTab::Operator => self.session.zero_operator(&[i]),
+                                _ => self.session.zero_axes(&[i]),
+                            }
+                        }
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            ui.label(
+                                RichText::new(format!("{:9.3}", values[i]))
+                                    .monospace()
+                                    .size(30.0)
+                                    .color(col(self.theme.accent)),
+                            );
+                        });
                     });
                 });
-            }
-            ui.horizontal(|ui| {
-                ui.label(format!(
-                    "{}: {:.0}",
-                    self.t(Text::McSpindle),
-                    st.spindle_rpm
-                ));
-                ui.label(format!(
-                    "{}: {:.0}",
-                    self.t(Text::McFeedRate),
-                    st.feed_mm_min
-                ));
-            });
-            ui.separator();
-            ui.label(
-                RichText::new(self.t(Text::McJog).to_uppercase()).color(col(self.theme.accent)),
-            );
-            ui.label(self.t(Text::McStep));
-            ui.horizontal_wrapped(|ui| {
-                for s in STEPS {
-                    if ui
-                        .selectable_label(self.session.step_mm == s, format!("{s}"))
-                        .clicked()
-                    {
-                        self.session.step_mm = s;
-                    }
-                }
-            });
-            ui.horizontal(|ui| {
-                ui.label(self.t(Text::McFeedRate));
-                ui.add(
-                    egui::DragValue::new(&mut self.session.feed_mm_min)
-                        .range(1.0..=20000.0)
-                        .speed(10.0),
-                );
-            });
-            ui.add_space(6.0);
-            let size = Vec2::new(64.0, 44.0);
-            let mut pad = |ui: &mut egui::Ui, label: &str, axis: usize, dir: f64| {
-                if ui.add(egui::Button::new(label).min_size(size)).clicked() {
-                    self.session.jog(axis, dir);
-                }
-            };
-            egui::Grid::new("pad").spacing([8.0, 8.0]).show(ui, |ui| {
-                ui.label("");
-                pad(ui, "Y+", 1, 1.0);
-                ui.label("");
-                ui.label("      ");
-                pad(ui, "Z+", 2, 1.0);
-                ui.end_row();
-                pad(ui, "X-", 0, -1.0);
-                ui.label("");
-                pad(ui, "X+", 0, 1.0);
-                ui.label("      ");
-                ui.label("");
-                ui.end_row();
-                ui.label("");
-                pad(ui, "Y-", 1, -1.0);
-                ui.label("");
-                ui.label("      ");
-                pad(ui, "Z-", 2, -1.0);
-                ui.end_row();
-            });
-            ui.add_space(8.0);
-            ui.horizontal_wrapped(|ui| {
-                if ui.button(self.t(Text::McHome)).clicked() {
-                    self.session.home();
-                }
-                if ui.button(self.t(Text::McZero)).clicked() {
-                    self.session.zero();
-                }
-                if ui.button(self.t(Text::McUnlock)).clicked() {
-                    self.session.unlock();
-                }
-            });
+        }
+    }
+
+    /// The speed of the move and the speed of the spindle, each with its little picture.
+    fn speed_rows(&mut self, ui: &mut egui::Ui) {
+        let st = self.session.status.clone();
+        let rows = [
+            (Icon::Gauge, self.t(Text::McSpeed), st.feed_mm_min),
+            (Icon::Spindle, self.t(Text::McSpindle), st.spindle_rpm),
+        ];
+        for (icon, tip, v) in rows {
+            egui::Frame::new()
+                .fill(col(self.theme.panel_raised))
+                .corner_radius(6.0)
+                .inner_margin(egui::Margin::symmetric(8, 3))
+                .show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    ui.horizontal(|ui| {
+                        let (rect, resp) =
+                            ui.allocate_exact_size(Vec2::new(34.0, 30.0), egui::Sense::hover());
+                        resp.on_hover_text(tip);
+                        let p = ui.painter_at(rect);
+                        let line = Stroke::new(1.8, col(self.theme.dim));
+                        let c = rect.center();
+                        match icon {
+                            Icon::Gauge => {
+                                p.circle_stroke(c + Vec2::new(0.0, 2.0), 12.0, line);
+                                p.line_segment(
+                                    [c + Vec2::new(0.0, 2.0), c + Vec2::new(7.0, -6.0)],
+                                    line,
+                                );
+                            }
+                            _ => {
+                                p.rect_stroke(
+                                    Rect::from_center_size(
+                                        c - Vec2::new(0.0, 5.0),
+                                        Vec2::new(14.0, 10.0),
+                                    ),
+                                    2.0,
+                                    line,
+                                    StrokeKind::Inside,
+                                );
+                                p.line_segment([c, c + Vec2::new(0.0, 11.0)], line);
+                            }
+                        }
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            ui.label(
+                                RichText::new(format!("{v:.2}"))
+                                    .monospace()
+                                    .size(24.0)
+                                    .color(col(self.theme.text)),
+                            );
+                        });
+                    });
+                });
+        }
+    }
+
+    /// The codes in force (G and M), or the inputs and the outputs.
+    fn info_block(&mut self, ui: &mut egui::Ui) {
+        let (gc, io) = (self.t(Text::McGcodeTab), self.t(Text::McIoTab));
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.info_tab, 0, gc);
+            ui.selectable_value(&mut self.info_tab, 1, io);
         });
+        let dim = col(self.theme.dim);
+        if self.info_tab == 0 {
+            ui.label(RichText::new(self.t(Text::McActiveG)).color(dim));
+            ui.label(
+                RichText::new(self.session.modal.g_codes().join("  "))
+                    .monospace()
+                    .strong()
+                    .size(15.0),
+            );
+            ui.label(RichText::new(self.t(Text::McActiveM)).color(dim));
+            ui.label(
+                RichText::new(self.session.modal.m_codes().join("  "))
+                    .monospace()
+                    .strong()
+                    .size(15.0),
+            );
+        } else {
+            let st = self.session.status.clone();
+            let pin = |c: char| st.pins.contains(c);
+            let led = |ui: &mut egui::Ui, on: bool, label: &str, color: Color32| {
+                ui.horizontal(|ui| {
+                    let (rect, _) =
+                        ui.allocate_exact_size(Vec2::new(16.0, 16.0), egui::Sense::hover());
+                    let c = rect.center();
+                    ui.painter()
+                        .circle_filled(c, 6.0, if on { color } else { alpha(color, 40) });
+                    ui.painter()
+                        .circle_stroke(c, 6.0, Stroke::new(1.0, alpha(color, 160)));
+                    ui.label(label);
+                });
+            };
+            let (ok, danger) = (col(self.theme.ok), col(self.theme.danger));
+            ui.label(RichText::new(self.t(Text::McInputs)).color(dim));
+            ui.horizontal_wrapped(|ui| {
+                led(ui, pin('X'), "X", danger);
+                led(ui, pin('Y'), "Y", danger);
+                led(ui, pin('Z'), "Z", danger);
+                led(ui, pin('P'), "Probe", danger);
+                led(ui, pin('D'), "Door", danger);
+            });
+            ui.label(RichText::new(self.t(Text::McOutputs)).color(dim));
+            ui.horizontal_wrapped(|ui| {
+                led(ui, st.spindle_rpm > 0.0, self.t(Text::McSpindle), ok);
+                led(ui, self.session.modal.coolant != 9, "Coolant", ok);
+            });
+        }
+    }
+
+    /// The jog: the steps, the speed, the pad and the unlock.
+    fn jog_block(&mut self, ui: &mut egui::Ui) {
+        ui.label(RichText::new(self.t(Text::McJog).to_uppercase()).color(col(self.theme.accent)));
+        ui.label(self.t(Text::McStep));
+        ui.horizontal_wrapped(|ui| {
+            for s in STEPS {
+                if ui
+                    .selectable_label(self.session.step_mm == s, format!("{s}"))
+                    .clicked()
+                {
+                    self.session.step_mm = s;
+                }
+            }
+        });
+        ui.horizontal(|ui| {
+            ui.label(self.t(Text::McJogSpeed));
+            ui.add(
+                egui::DragValue::new(&mut self.session.feed_mm_min)
+                    .range(1.0..=20000.0)
+                    .speed(10.0),
+            );
+        });
+        let size = Vec2::new(52.0, 38.0);
+        let mut pad = |ui: &mut egui::Ui, label: &str, axis: usize, dir: f64| {
+            if ui.add(egui::Button::new(label).min_size(size)).clicked() {
+                self.session.jog(axis, dir);
+            }
+        };
+        egui::Grid::new("pad").spacing([6.0, 6.0]).show(ui, |ui| {
+            ui.label("");
+            pad(ui, "Y+", 1, 1.0);
+            ui.label("");
+            ui.label("");
+            pad(ui, "Z+", 2, 1.0);
+            pad(ui, "A+", 3, 1.0);
+            ui.end_row();
+            pad(ui, "X-", 0, -1.0);
+            ui.label("");
+            pad(ui, "X+", 0, 1.0);
+            ui.label("");
+            ui.label("");
+            ui.label("");
+            ui.end_row();
+            ui.label("");
+            pad(ui, "Y-", 1, -1.0);
+            ui.label("");
+            ui.label("");
+            pad(ui, "Z-", 2, -1.0);
+            pad(ui, "A-", 3, -1.0);
+            ui.end_row();
+        });
+        ui.add_space(6.0);
+        if ui.button(self.t(Text::McUnlock)).clicked() {
+            self.session.unlock();
+        }
     }
 
     fn right(&mut self, ui: &mut egui::Ui) {
@@ -440,7 +686,7 @@ impl App {
 
     fn bottom(&mut self, ui: &mut egui::Ui) {
         egui::Panel::bottom("bottom")
-            .exact_size(170.0)
+            .exact_size(120.0)
             .show(ui, |ui| {
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {

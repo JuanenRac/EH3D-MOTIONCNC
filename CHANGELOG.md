@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The left panel made like the one of PlanetCNC:** a column of buttons (set the work zero in XYZ or in XY, go to the stored positions G28 and G30, go to the zero in XY or in Z, home), the position with the tabs Work, Machine, Operator and GCode and the four axes X, Y, Z and A (the letter of an axis sets its zero), the speed and the spindle, the active G-codes and M-codes or the inputs and outputs, and the jog with the A axis; the session keeps the codes in force, the zero of the operator and the stored positions (tested).
 ## [0.0.3] - The first window: a simulated machine with jog, zero, home, commands and a G-code program with its path, in eight languages and five themes
 
 - **Screenshots in the README:** three pictures of the window (a program running, a second theme and the German interface) in all the eight languages of the README.

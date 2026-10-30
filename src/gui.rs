@@ -882,6 +882,12 @@ impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.frame += 1;
+        // the window follows its size: from 720p to 1080p and on to the large and the wide screens everything grows or shrinks with it
+        let native = ctx.content_rect().size() * ctx.zoom_factor();
+        let zoom = (native.x / 1400.0).min(native.y / 800.0).clamp(0.75, 3.0);
+        if (zoom - ctx.zoom_factor()).abs() > 0.01 {
+            ctx.set_zoom_factor(zoom);
+        }
         if self.visuals_for != Some(self.theme.id) {
             apply_visuals(&ctx, &self.theme);
             self.visuals_for = Some(self.theme.id);
@@ -960,6 +966,7 @@ pub fn run(o: &Options) -> eframe::Result {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size(size)
             .with_min_inner_size([1000.0, 600.0])
+            .with_maximized(o.shot.is_none())
             .with_title("EH3D-MOTIONCNC"),
         ..Default::default()
     };

@@ -14,16 +14,16 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-0-lightgrey.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Contrôle d'honnêteté - ce qui fonctionne réellement aujourd'hui :** un crate Rust qui utilise la vue d'un travail d'`eh3d-view` d'EH3D-COMMON, où elle est partagée avec les autres programmes de la suite et possède ses tests. Cette vue contient la scène d'un travail sur la table de travail (chaque trou avec la taille de son foret, les trajets de fraisage, l'avancement du travail, un travail de perçage et un de fraisage superposés), la vue de dessus et la vue isométrique de la machine adaptées à la taille de la table, un contrôle qui dit ce qui ne tient pas sur la table avant de lancer un travail, cinq thèmes (Forge, Neon Arcade, Glass Pro, le gris classique de Windows et un qui suit les couleurs de Windows) et les textes de l'interface en huit langues. **Il n'y a pas encore de fenêtre ni de commande de machine**, rien de tout cela n'a tourné sur une machine et ce dépôt n'a pas de tests propres : il ne fait que réexporter la vue.
+**Vérification d'honnêteté - ce qui tourne aujourd'hui :** un programme Rust avec une fenêtre (`motioncnc`) qui pilote une machine **simulée** : il montre la position de la machine (pièce et machine), la déplace à la main avec un pavé de jog, fixe le zéro, fait la prise d'origine, prend les commandes tapées par l'opérateur, exécute un programme G-code ligne par ligne (avec pause, arrêt et arrêt d'urgence), dessine la trajectoire du programme sur la table avec les lignes faites marquées, et s'arrête sur ce que le contrôleur refuse. La fenêtre parle huit langues et porte cinq thèmes. L'interface des contrôleurs (`eh3d-controller`, dans EH3D-COMMON) a GRBL écrit contre une ligne simulée et liste les autres familles comme pas encore pilotées. 12 tests tournent sur un ordinateur. **Rien ici n'a tourné sur une vraie machine**, aucun port série ni connexion réseau n'est ouvert, et les arcs et les autres codes ne sont ni dessinés ni exécutés par le simulateur.
 
 ---
 
-> **État de la sûreté et de la sécurité :** ce dépôt n'est pas un système de sécurité et ne pilote aucune machine. Il n'ouvre aucun port série ni connexion réseau et ne lit pas de fichiers d'autres personnes. Quand la commande de machine sera ajoutée, elle devra faire ses preuves sur un simulateur puis sur une machine réelle avant d'être déclarée fonctionnelle, et les fins de course et un arrêt d'urgence restent l'affaire de l'unité de commande de la machine elle-même.
+> **État de sécurité :** ce programme ne pilote qu'une machine simulée : il n'ouvre aucun port série ni connexion réseau. Quand un vrai contrôleur sera connecté, il devra faire ses preuves sur un simulateur puis sur une vraie machine avant d'être dit fonctionnel, et les fins de course et un arrêt d'urgence restent l'affaire de l'unité de commande de la machine ; l'arrêt d'urgence de la fenêtre n'est pas un circuit de sécurité.
 
 ## 📋 En un coup d'œil
 
@@ -31,9 +31,9 @@
 |---|---|
 | Version | `0.0.2` |
 | Maturité | Échafaudage |
-| Tests | 0 |
+| Tests | 12 |
 | Pile technique | Rust |
-| Sur du matériel réel | Non : rien ici ne se connecte à une machine |
+| Sur du matériel réel | Non : il ne pilote qu'une machine simulée |
 
 **Aller à :** [Présentation](#-présentation) · [Architecture](#-architecture) · [Démarrage rapide](#-démarrage-rapide) · [Tests](#-tests) · [Structure](#-structure-du-dépôt) · [Liés](#-projets-liés)
 
@@ -46,24 +46,24 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela signifie ici |
 |---|---|---|
 | Bibliothèque de base | 🟡 | Un crate Rust qui réexporte `scene`, `texts` et `theme` d'`eh3d-view` sous le nom de ce programme ; il a besoin du dossier d'EH3D-COMMON à côté. |
-| Scène et vues | 🟡 | Écrites et testées sur un ordinateur dans EH3D-COMMON : le travail sur la table, les vues de dessus et isométrique, le contrôle de ce qui ne tient pas ; aucune fenêtre ne les dessine encore. |
-| Thèmes et textes | 🟡 | Cinq thèmes avec contrôle du contraste et les textes de l'interface en huit langues, testés dans EH3D-COMMON ; pas encore vus dans une fenêtre. |
-| Tests | 🟠 | Ce dépôt a 0 tests propres (`cargo test`) : la vue est testée là où elle vit, dans EH3D-COMMON. |
-| Fenêtre et jog | 🔴 | Pas commencé. |
-| Commande de machine | 🔴 | Pas commencé : aucune connexion à une machine, pas de G-code, aucun travail de perçage ou de fraisage ne part d'ici. |
-| Documentation | 🟡 | README en huit langues, les deux images et le journal des modifications ; il y a peu à documenter tant que le programme n'existe pas. |
+| Scène et vues | 🟡 | Écrite et testée dans EH3D-COMMON ; la fenêtre de ce programme dessine la trajectoire d'un programme sur la table et la position de l'outil (vue sur un ordinateur). |
+| Thèmes et textes | 🟡 | Cinq thèmes et les mots de l'interface en huit langues, vus dans la fenêtre de ce programme. |
+| Tests | 🟡 | 12 tests réussissent sur un ordinateur (`cargo test --features gui`) : la session (jog, zéro, prise d'origine, un programme, pause, alarme, arrêt d'urgence), la trajectoire d'un programme et la ligne de commande ; le contrôleur simulé est testé dans EH3D-COMMON. |
+| Fenêtre et jog | 🟡 | Fonctionne sur un ordinateur avec le contrôleur simulé : position, pavé de jog, pas, avance, prise d'origine, zéro, déverrouillage, une ligne de commandes et un journal ; pas de vraie machine. |
+| Commande de machine | 🟠 | Seulement le simulateur : un programme s'exécute ligne par ligne avec pause, arrêt et arrêt d'urgence ; aucun vrai contrôleur n'est encore connecté d'ici. |
+| Documentation | 🟡 | README en huit langues, les deux images, trois programmes d'exemple et le changelog. |
 
 ## 🎯 Présentation
 
-* La **bibliothèque de base** (`src/lib.rs`) : réexporte `scene`, `texts` et `theme` d'`eh3d-view` d'EH3D-COMMON, pour que le futur programme les utilise sous son propre nom et que tous les programmes de la suite montrent un travail de la même façon.
-* La **scène** d'un travail sur la table : trous par taille de foret, trajets de fraisage, l'avancement du travail, un travail de perçage et un de fraisage superposés, la vue de dessus, la vue isométrique de la machine adaptée à la taille de la table et un contrôle de ce qui ne tient pas sur la table.
-* Les **thèmes** : Forge (par défaut), Neon Arcade, Glass Pro, le gris classique de Windows et un qui suit les couleurs de Windows ; chacun peut écrire le sien dans un fichier texte.
-* Les **textes de l'interface** en anglais, espagnol, italien, allemand, français, portugais, chinois et japonais.
-* Ce que ce sera : un programme pour percer, fraiser et faire de la CNC 2D et 3D, construit sur cette base, sur le ZIP des travaux d'EH3D-COMMON (`eh3d-archive`) et sur les moteurs d'EH3D-DRILLPRO et d'EH3D-ROUTEPRO. **Rien de cela n'existe encore.**
+* La **fenêtre** (`src/gui.rs`, `motioncnc`) : la position de la machine (pièce et machine), un pavé de jog avec ses pas et son avance, prise d'origine, zéro et déverrouillage, l'arrêt d'urgence, une ligne de commandes avec son journal, et le programme avec sa trajectoire sur la table.
+* La **session** (`src/session.rs`) : ce que le programme fait avec n'importe quel contrôleur de `eh3d-controller` : jog, zéro, prise d'origine, envoyer une ligne, exécuter un programme ligne par ligne, pause, arrêt et les alarmes ; elle est testée sur le contrôleur simulé.
+* La **trajectoire d'un programme** (`src/gcode.rs`) : les déplacements droits (`G0`, `G1`, absolus ou relatifs, en mm ou en pouces) dessinés avant l'exécution ; les arcs ne sont pas dessinés.
+* Le **contrôleur simulé** (`eh3d_controller::sim`, dans EH3D-COMMON) : une machine en mémoire avec des limites de course qui déclenchent une alarme ; les familles de contrôleurs du marché sont listées dans `eh3d-controller`, GRBL est la première écrite et les autres apparaissent comme pas encore pilotées.
+* Les **thèmes et les mots** de `eh3d-view` : Forge (par défaut), Neon Arcade, Glass Pro, le gris classique de Windows et un qui suit Windows, et l'interface en anglais, espagnol, italien, allemand, français, portugais, chinois et japonais. Ce qu'il sera : un programme pour percer, fraiser et faire de la CNC 2D et 3D sur les moteurs d'EH3D-DRILLPRO et EH3D-ROUTEPRO ; cette partie n'existe pas encore.
 
 ## 🧩 Rôle dans EH3D
 
-EH3D-MOTIONCNC sera le futur programme de commande de machine d'EH3D et n'en est aujourd'hui que la base. Il dépend par chemin d'EH3D-COMMON (le dossier `EH3D-COMMON` doit se trouver à côté de celui-ci) et d'aucun autre dépôt EH3D.
+EH3D-MOTIONCNC est le programme de commande de machine d'EH3D, qui fonctionne aujourd'hui sur une machine simulée. Il dépend par chemin d'EH3D-COMMON (le dossier `EH3D-COMMON` doit se trouver à côté de celui-ci : la vue, les thèmes, les mots et les contrôleurs) et d'aucun autre dépôt EH3D pour l'instant.
 
 ## 🏛️ Architecture
 
@@ -75,25 +75,26 @@ Comment les parties s'assemblent : qui l'utilisera, ce que contient ce dépôt e
 
 ## 🔒 Sécurité et protection
 
-Ce dépôt n'ouvre aucun port série, aucune connexion réseau et aucun fichier d'autres personnes ; le seul texte extérieur que ses parties lisent est un fichier de thème écrit par l'utilisateur, qui est vérifié plutôt que cru. Il ne pilote pas de machine et n'est pas un système de sécurité. Voir [SECURITY.md](SECURITY.md).
+Ce programme n'ouvre aucun port série, aucune connexion réseau et aucun fichier d'autres personnes, sauf le fichier G-code que choisit l'opérateur (lu comme du texte, jamais exécuté de lui-même). Il ne pilote qu'une machine simulée et n'est pas un système de sécurité. Voir [SECURITY.md](SECURITY.md).
 
 ## 🚀 Démarrage rapide
 
 Il faut une chaîne d'outils Rust stable et le dossier `EH3D-COMMON` à côté de celui-ci.
 
 ```bash
-cargo build --release
-cargo test
-cargo clippy --all-targets -- -D warnings
+cargo build --release --features gui
+cargo test --features gui
+cargo clippy --all-targets --features gui -- -D warnings
 cargo fmt --all --check
 python -I tools/ci_validate.py
+cargo run --release --features gui -- examples/02_frame_and_pocket.nc
 ```
 
-`build.bat` / `build.sh` compilent la bibliothèque, `test.bat` / `test.sh` lancent les tests et `run.bat` / `run.sh` indiquent qu'il n'y a pas encore de programme et lancent les tests. Les scripts attendent une touche à la fin sauf si `NOPAUSE` est défini.
+`build.bat` / `build.sh` compilent le programme, `test.bat` / `test.sh` lancent les tests et `run.bat` / `run.sh` ouvrent la fenêtre sur un programme d'exemple. Les scripts attendent une touche à la fin sauf si `NOPAUSE` est défini.
 
 ## 🧪 Tests
 
-`cargo test` signale 0 tests ici : ce dépôt ne fait que réexporter la vue, dont les tests sont dans EH3D-COMMON. La CI lance aussi `cargo fmt --check` et `cargo clippy` avec les avertissements comme erreurs, et `python -I tools/ci_validate.py` vérifie le manifeste, les versions, le journal des modifications et les huit README.
+`cargo test --features gui` lance 12 tests : la session (jog et zéro, un programme ligne par ligne, pause et reprise, une ligne refusée, l'arrêt d'urgence et l'alarme, le journal des commandes, la prise d'origine), la trajectoire d'un programme et la ligne de commande ; la vue et le contrôleur simulé sont testés dans EH3D-COMMON. La CI lance aussi `cargo fmt --check` et `cargo clippy` avec les avertissements en erreurs, et `python -I tools/ci_validate.py` vérifie le manifeste, les versions, le changelog et les huit README.
 
 ## 🏗️ Compilation et publication
 
@@ -111,7 +112,13 @@ La version se trouve dans `Cargo.toml` et dans `eh3d.project.json`, et chaque ve
 ```text
 EH3D-MOTIONCNC/
 ├── src/
-│   └── lib.rs                                   réexporte scène, textes et thème d'eh3d-view d'EH3D-COMMON
+│   ├── lib.rs                                   les modules et la vue d'eh3d-view réexportée sous le nom de ce programme
+│   ├── gui.rs                                   la fenêtre : position, jog, programme, trajectoire, commandes et journal
+│   ├── session.rs                               ce qu'on fait avec un contrôleur : jog, zéro, prise d'origine, un programme ligne par ligne, pause, arrêt, alarmes
+│   ├── gcode.rs                                 les déplacements droits d'un programme G-code, pour dessiner sa trajectoire
+│   ├── cli.rs                                   la ligne de commande : le fichier, la langue, le thème et les options d'image
+│   └── bin/motioncnc.rs                         le programme qui ouvre la fenêtre
+├── examples/                                    trois programmes G-code d'exemple, d'un carré à une longue spirale
 ├── tools/                                       contrôle de CI, du README et outils d'images
 ├── docs/                                        les sources des images d'Architecture et de Structure du dépôt
 ├── .github/                                     workflow de CI, modèles d'issues et de pull requests
@@ -131,17 +138,17 @@ EH3D-MOTIONCNC/
 
 **Limites connues aujourd'hui**
 
-* Il n'y a ni fenêtre ni commande de machine : rien ici n'a tourné sur une machine.
-* Il n'y a pas de tests dans ce dépôt ; la vue est testée dans EH3D-COMMON.
+* Rien ici n'a tourné sur une vraie machine : le contrôleur est un simulateur et aucun port série ni connexion réseau n'est ouvert.
+* Le simulateur ne prend que le G-code de base (`G0`, `G1`, `G90`, `G91`, `G20`, `G21`, `G92`, `M3` à `M9`) ; les arcs, les cycles fixes et le palpage sont refusés, et la trajectoire ne dessine pas les arcs.
 * Il a besoin du dossier `EH3D-COMMON` à côté, car il en dépend par chemin.
 
 **Ensuite**
 
-* Étudier les programmes de commande de machine qui existent aujourd'hui (un natif et un .NET) pour décider de ce dont l'opérateur a besoin.
-* Une fenêtre avec la scène, les thèmes et les textes de l'interface.
-* Jog et G-code : connexion à une machine, d'abord sur un simulateur.
-* Vues 2D et 3D d'un travail en cours.
-* Réunir les moteurs d'EH3D-DRILLPRO et d'EH3D-ROUTEPRO pour qu'un seul programme perce et fraise.
+* Un vrai contrôleur : d'abord GRBL par un port série, puis les autres familles, puis le contrôleur de HYDRA-UMC.
+* Les arcs et le reste du G-code dans le simulateur et dans la trajectoire.
+* Une vue 3D de la trajectoire avec la hauteur des coupes.
+* Palpage, changeur d'outils et les matériaux de la machine.
+* Réunir les moteurs d'EH3D-DRILLPRO et EH3D-ROUTEPRO pour qu'un seul programme perce et fraise.
 
 ## 🌍 Langues
 

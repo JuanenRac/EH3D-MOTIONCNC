@@ -12,5 +12,5 @@ if not defined PRETTY_RUN if exist "%~dp0tools\pretty_run.py" (
 )
 rem PRETTY_RUN_END
 cd /d "%~dp0"
-cargo test
+cargo test --features gui
 exit /b %ERRORLEVEL%

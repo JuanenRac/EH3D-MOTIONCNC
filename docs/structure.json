@@ -7,14 +7,14 @@
   "ecosystem": "eh3d",
   "svg": "en",
   "tagline": {
-    "en": "The shared base of the EH3D machine-control programs: the view of a job, in eight languages.",
-    "es": "La base compartida de los programas de control de máquina de EH3D: la vista de un trabajo, en ocho idiomas.",
-    "de": "Die gemeinsame Basis der EH3D-Maschinensteuerprogramme: die Ansicht eines Auftrags, in acht Sprachen.",
-    "fr": "La base commune des programmes de commande de machine EH3D : la vue d'un travail, en huit langues.",
-    "it": "La base comune dei programmi di controllo macchina EH3D: la vista di un lavoro, in otto lingue.",
-    "ja": "EH3D のマシン制御プログラムの共通基盤：8 言語対応のジョブ表示。",
-    "zh": "EH3D 机床控制程序的共享基础：作业视图，支持八种语言。",
-    "pt": "A base partilhada dos programas de controlo de máquina do EH3D: a vista de um trabalho, em oito idiomas."
+    "en": "The EH3D machine-control program: a window over a controller (a simulated one for now), in eight languages.",
+    "es": "El programa de control de máquina de EH3D: una ventana sobre un controlador (de momento simulado), en ocho idiomas.",
+    "de": "Das EH3D-Maschinensteuerprogramm: ein Fenster über einer Steuerung (vorerst simuliert), in acht Sprachen.",
+    "fr": "Le programme de commande de machine EH3D : une fenêtre sur un contrôleur (simulé pour l'instant), en huit langues.",
+    "it": "Il programma di controllo macchina EH3D: una finestra su un controllore (per ora simulato), in otto lingue.",
+    "ja": "EH3D のマシン制御プログラム：コントローラー（今は模擬）の上のウィンドウ、8 言語対応。",
+    "zh": "EH3D 机床控制程序：控制器（目前为模拟）之上的窗口，支持八种语言。",
+    "pt": "O programa de controlo de máquina do EH3D: uma janela sobre um controlador (por agora simulado), em oito idiomas."
   },
   "cards": [
     {
@@ -22,27 +22,92 @@
       "span": 3,
       "accent": "a",
       "sub": {
-        "en": "the library: the view of a job under this program's own name",
-        "es": "la biblioteca: la vista de un trabajo con el nombre propio de este programa",
-        "de": "die Bibliothek: die Ansicht eines Auftrags unter dem eigenen Namen dieses Programms",
-        "fr": "la bibliothèque : la vue d'un travail sous le nom propre de ce programme",
-        "it": "la libreria: la vista di un lavoro con il nome proprio di questo programma",
-        "ja": "ライブラリ：このプログラム自身の名前で使うジョブの表示",
-        "zh": "库：以本程序自己的名称使用的作业视图",
-        "pt": "a biblioteca: a vista de um trabalho com o nome próprio deste programa"
+        "en": "the program: the window, the session with a controller, the path of a program",
+        "es": "el programa: la ventana, la sesión con un controlador, la trayectoria de un programa",
+        "de": "das Programm: das Fenster, die Sitzung mit einer Steuerung, die Bahn eines Programms",
+        "fr": "le programme : la fenêtre, la session avec un contrôleur, la trajectoire d'un programme",
+        "it": "il programma: la finestra, la sessione con un controllore, il percorso di un programma",
+        "ja": "プログラム：ウィンドウ、コントローラーとのセッション、プログラムの経路",
+        "zh": "程序：窗口、与控制器的会话、程序路径",
+        "pt": "o programa: a janela, a sessão com um controlador, a trajetória de um programa"
       },
       "rows": [
         {
           "name": "lib.rs",
           "desc": {
-            "en": "re-exports scene, texts and theme from eh3d-view of EH3D-COMMON",
-            "es": "reexporta escena, textos y tema de eh3d-view de EH3D-COMMON",
-            "de": "exportiert Szene, Texte und Thema aus eh3d-view von EH3D-COMMON erneut",
-            "fr": "réexporte scène, textes et thème d'eh3d-view d'EH3D-COMMON",
-            "it": "riesporta scena, testi e tema da eh3d-view di EH3D-COMMON",
-            "ja": "EH3D-COMMON の eh3d-view からシーン、テキスト、テーマを再エクスポート",
-            "zh": "重新导出 EH3D-COMMON 中 eh3d-view 的场景、文本和主题",
-            "pt": "reexporta cena, textos e tema do eh3d-view do EH3D-COMMON"
+            "en": "the modules, and the view of eh3d-view re-exported under this program's name",
+            "es": "los módulos y la vista de eh3d-view reexportada con el nombre de este programa",
+            "de": "die Module und die Ansicht von eh3d-view unter dem Namen dieses Programms",
+            "fr": "les modules et la vue d'eh3d-view réexportée sous le nom de ce programme",
+            "it": "i moduli e la vista di eh3d-view riesportata con il nome di questo programma",
+            "ja": "モジュールと、このプログラム名で再エクスポートした eh3d-view の表示",
+            "zh": "各模块，以及以本程序名称重新导出的 eh3d-view 视图",
+            "pt": "os módulos e a vista do eh3d-view reexportada com o nome deste programa"
+          }
+        },
+        {
+          "name": "gui.rs",
+          "desc": {
+            "en": "the window: position, jog, program, path, commands and log",
+            "es": "la ventana: posición, jog, programa, trayectoria, órdenes y registro",
+            "de": "das Fenster: Position, Jog, Programm, Bahn, Befehle und Protokoll",
+            "fr": "la fenêtre : position, jog, programme, trajectoire, commandes et journal",
+            "it": "la finestra: posizione, jog, programma, percorso, comandi e registro",
+            "ja": "ウィンドウ：位置、ジョグ、プログラム、経路、コマンド、ログ",
+            "zh": "窗口：位置、点动、程序、路径、命令和日志",
+            "pt": "a janela: posição, jog, programa, trajetória, comandos e registo"
+          }
+        },
+        {
+          "name": "session.rs",
+          "desc": {
+            "en": "what is done with a controller: jog, zero, home, a program line by line, pause, stop, alarms",
+            "es": "lo que se hace con un controlador: jog, cero, referencia, un programa línea a línea, pausa, parada, alarmas",
+            "de": "was mit einer Steuerung getan wird: Jog, Nullpunkt, Referenz, ein Programm Zeile für Zeile, Pause, Stopp, Alarme",
+            "fr": "ce qu'on fait avec un contrôleur : jog, zéro, prise d'origine, un programme ligne par ligne, pause, arrêt, alarmes",
+            "it": "ciò che si fa con un controllore: jog, zero, origine, un programma riga per riga, pausa, stop, allarmi",
+            "ja": "コントローラーで行うこと：ジョグ、ゼロ、原点復帰、プログラムの 1 行ずつの実行、一時停止、停止、アラーム",
+            "zh": "对控制器所做的事：点动、清零、回零、逐行运行程序、暂停、停止、报警",
+            "pt": "o que se faz com um controlador: jog, zero, referência, um programa linha a linha, pausa, paragem, alarmes"
+          }
+        },
+        {
+          "name": "gcode.rs",
+          "desc": {
+            "en": "the straight moves of a G-code program, to draw its path",
+            "es": "los movimientos rectos de un programa G-code, para dibujar su trayectoria",
+            "de": "die geraden Bewegungen eines G-Code-Programms, um seine Bahn zu zeichnen",
+            "fr": "les déplacements droits d'un programme G-code, pour dessiner sa trajectoire",
+            "it": "i movimenti rettilinei di un programma G-code, per disegnarne il percorso",
+            "ja": "G コードプログラムの直線移動。経路の描画用",
+            "zh": "G 代码程序的直线移动，用于绘制其路径",
+            "pt": "os movimentos retos de um programa G-code, para desenhar a sua trajetória"
+          }
+        },
+        {
+          "name": "cli.rs",
+          "desc": {
+            "en": "the command line: the file, the language, the theme and the picture options",
+            "es": "la línea de comandos: el fichero, el idioma, el tema y las opciones de imagen",
+            "de": "die Befehlszeile: die Datei, die Sprache, das Thema und die Bildoptionen",
+            "fr": "la ligne de commande : le fichier, la langue, le thème et les options d'image",
+            "it": "la riga di comando: il file, la lingua, il tema e le opzioni per l'immagine",
+            "ja": "コマンドライン：ファイル、言語、テーマ、画像のオプション",
+            "zh": "命令行：文件、语言、主题和截图选项",
+            "pt": "a linha de comandos: o ficheiro, o idioma, o tema e as opções de imagem"
+          }
+        },
+        {
+          "name": "bin/motioncnc.rs",
+          "desc": {
+            "en": "the program that opens the window",
+            "es": "el programa que abre la ventana",
+            "de": "das Programm, das das Fenster öffnet",
+            "fr": "le programme qui ouvre la fenêtre",
+            "it": "il programma che apre la finestra",
+            "ja": "ウィンドウを開くプログラム",
+            "zh": "打开窗口的程序",
+            "pt": "o programa que abre a janela"
           }
         }
       ]
@@ -61,6 +126,19 @@
       "kind": "group",
       "span": 3,
       "rows": [
+        {
+          "name": "examples/",
+          "desc": {
+            "en": "three sample G-code programs, from a square to a long spiral",
+            "es": "tres programas G-code de ejemplo, de un cuadrado a una espiral larga",
+            "de": "drei Beispiel-G-Code-Programme, vom Quadrat bis zur langen Spirale",
+            "fr": "trois programmes G-code d'exemple, d'un carré à une longue spirale",
+            "it": "tre programmi G-code di esempio, da un quadrato a una lunga spirale",
+            "ja": "3 つのサンプル G コード：正方形から長い渦巻きまで",
+            "zh": "三个示例 G 代码程序，从正方形到长螺旋",
+            "pt": "três programas G-code de exemplo, de um quadrado a uma espiral longa"
+          }
+        },
         {
           "name": "tools/",
           "desc": {

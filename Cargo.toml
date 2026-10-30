@@ -2,7 +2,7 @@
 name = "eh3d-motioncnc"
 version = "0.0.2"
 edition = "2021"
-description = "The EH3D machine-control program: drilling, routing and 2D and 3D CNC work (the view of a job so far)"
+description = "The EH3D machine-control program: a window over a controller, a simulated one so far"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/JuanenRac/EH3D-MOTIONCNC"
 readme = "README.md"

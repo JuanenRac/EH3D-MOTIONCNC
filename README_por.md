@@ -14,16 +14,16 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Version-0.0.2-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-0-lightgrey.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-12-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Verificação de honestidade - o que realmente corre hoje:** um crate de Rust que usa a vista de um trabalho do `eh3d-view` do EH3D-COMMON, onde é partilhada com os outros programas da suite e tem os seus testes. Essa vista tem a cena de um trabalho na mesa de trabalho (cada furo com o tamanho da sua broca, os trajetos de fresagem, quanto do trabalho já está feito, um trabalho de furação e um de fresagem sobrepostos), a vista de cima e a vista isométrica da máquina ajustadas ao tamanho da mesa, uma verificação que diz o que não cabe na mesa antes de começar um trabalho, cinco temas (Forge, Neon Arcade, Glass Pro, o cinzento clássico do Windows e um que segue as cores do Windows) e os textos da interface em oito idiomas. **Ainda não há ecrã nem controlo de máquina**, nada disto correu numa máquina e este repositório não tem testes próprios: só reexporta a vista.
+**Verificação de honestidade - o que funciona hoje:** um programa em Rust com uma janela (`motioncnc`) que comanda uma máquina **simulada**: mostra a posição da máquina (peça e máquina), move-a à mão com um teclado de jog, põe o zero, faz a referência, aceita os comandos escritos pelo operador, executa um programa G-code linha a linha (com pausa, paragem e paragem de emergência), desenha a trajetória do programa na mesa com as linhas feitas marcadas e pára no que o controlador recusa. A janela fala oito idiomas e tem cinco temas. A interface de controladores (`eh3d-controller`, no EH3D-COMMON) tem o GRBL escrito contra uma linha simulada e lista as outras famílias como ainda sem controlador. 12 testes correm num computador. **Nada aqui foi executado numa máquina real**, não se abre nenhuma porta série nem ligação de rede, e os arcos e os outros códigos o simulador nem os desenha nem os executa.
 
 ---
 
-> **Estado de segurança (safety) e de segurança informática:** este repositório não é um sistema de segurança e não comanda nenhuma máquina. Não abre nenhuma porta série nem ligação de rede e não lê ficheiros de outras pessoas. Quando o controlo de máquina for acrescentado, terá de provar-se primeiro num simulador e depois numa máquina real antes de se dizer que funciona, e os fins de curso e uma paragem de emergência continuam a ser tarefa da própria unidade de controlo da máquina.
+> **Estado de segurança:** este programa comanda apenas uma máquina simulada: não abre nenhuma porta série nem ligação de rede. Quando se ligar um controlador real, terá de se provar num simulador e depois numa máquina real antes de se dizer funcional, e os fins de curso e uma paragem de emergência continuam a ser da própria unidade de controlo da máquina; a paragem de emergência da janela não é um circuito de segurança.
 
 ## 📋 Num relance
 
@@ -31,9 +31,9 @@
 |---|---|
 | Versão | `0.0.2` |
 | Maturidade | Estrutura inicial |
-| Testes | 0 |
+| Testes | 12 |
 | Tecnologias | Rust |
-| Em hardware real | Não: nada aqui se liga a uma máquina |
+| Em hardware real | Não: comanda apenas uma máquina simulada |
 
 **Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Estrutura](#-estrutura-do-repositório) · [Relacionados](#-projetos-relacionados)
 
@@ -46,24 +46,24 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. Esc
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Biblioteca base | 🟡 | Um crate de Rust que reexporta `scene`, `texts` e `theme` do `eh3d-view` com o nome deste programa; precisa da pasta do EH3D-COMMON ao lado. |
-| Cena e vistas | 🟡 | Escritas e testadas num computador no EH3D-COMMON: o trabalho na mesa, as vistas de cima e isométrica, a verificação do que não cabe; ainda nenhum ecrã as desenha. |
-| Temas e textos | 🟡 | Cinco temas com verificação de contraste e os textos da interface em oito idiomas, testados no EH3D-COMMON; ainda não vistos numa janela. |
-| Testes | 🟠 | Este repositório tem 0 testes próprios (`cargo test`): a vista é testada onde vive, no EH3D-COMMON. |
-| Janela e jog | 🔴 | Por começar. |
-| Controlo de máquina | 🔴 | Por começar: nenhuma ligação a uma máquina, nada de G-code, nenhum trabalho de furação ou fresagem corre a partir daqui. |
-| Documentação | 🟡 | README em oito idiomas, as duas imagens e o registo de alterações; há pouco para documentar até o programa existir. |
+| Cena e vistas | 🟡 | Escrita e testada no EH3D-COMMON; a janela deste programa desenha a trajetória de um programa na mesa e a posição da ferramenta (vista num computador). |
+| Temas e textos | 🟡 | Cinco temas e as palavras da interface em oito idiomas, vistos na janela deste programa. |
+| Testes | 🟡 | Passam 12 testes num computador (`cargo test --features gui`): a sessão (jog, zero, referência, um programa, pausa, alarme, paragem de emergência), a trajetória de um programa e a linha de comandos; o controlador simulado é testado no EH3D-COMMON. |
+| Janela e jog | 🟡 | Funciona num computador com o controlador simulado: posição, teclado de jog, passos, avanço, referência, zero, desbloqueio, uma linha de comandos e um registo; sem máquina real. |
+| Controlo de máquina | 🟠 | Só o simulador: um programa corre linha a linha com pausa, paragem e paragem de emergência; ainda não se liga nenhum controlador real a partir daqui. |
+| Documentação | 🟡 | README em oito idiomas, as duas imagens, três programas de exemplo e o changelog. |
 
 ## 🎯 Visão geral
 
-* A **biblioteca base** (`src/lib.rs`): reexporta `scene`, `texts` e `theme` do `eh3d-view` do EH3D-COMMON, para que o futuro programa os use com o seu próprio nome e todos os programas da suite mostrem um trabalho da mesma maneira.
-* A **cena** de um trabalho na mesa: furos por tamanho de broca, trajetos de fresagem, o avanço do trabalho, um trabalho de furação e outro de fresagem sobrepostos, a vista de cima, a vista isométrica da máquina ajustada ao tamanho da mesa e uma verificação do que não cabe na mesa.
-* Os **temas**: Forge (o predefinido), Neon Arcade, Glass Pro, o cinzento clássico do Windows e um que segue as cores do Windows; cada utilizador pode escrever o seu num ficheiro de texto.
-* Os **textos da interface** em inglês, espanhol, italiano, alemão, francês, português, chinês e japonês.
-* O que será: um programa para furar, fresar e fazer CNC 2D e 3D, construído sobre esta base, sobre o ZIP de trabalhos do EH3D-COMMON (`eh3d-archive`) e sobre os motores do EH3D-DRILLPRO e do EH3D-ROUTEPRO. **Nada disso existe ainda.**
+* A **janela** (`src/gui.rs`, `motioncnc`): a posição da máquina (peça e máquina), um teclado de jog com os seus passos e avanço, referência, zero e desbloqueio, a paragem de emergência, uma linha de comandos com o seu registo e o programa com a sua trajetória na mesa.
+* A **sessão** (`src/session.rs`): o que o programa faz com qualquer controlador de `eh3d-controller`: jog, zero, referência, enviar uma linha, executar um programa linha a linha, pausa, paragem e os alarmes; é testada com o controlador simulado.
+* A **trajetória de um programa** (`src/gcode.rs`): os movimentos retos (`G0`, `G1`, absolutos ou relativos, em mm ou polegadas) desenhados antes de executar o programa; os arcos não se desenham.
+* O **controlador simulado** (`eh3d_controller::sim`, no EH3D-COMMON): uma máquina em memória com limites de curso que dão alarme; as famílias de controladores do mercado estão listadas em `eh3d-controller`, o GRBL é a primeira escrita e as outras aparecem como ainda sem controlador.
+* Os **temas e as palavras** de `eh3d-view`: Forge (o predefinido), Neon Arcade, Glass Pro, o cinzento clássico do Windows e um que segue o Windows, e a interface em inglês, espanhol, italiano, alemão, francês, português, chinês e japonês. O que será: um programa para furar, fresar e fazer CNC 2D e 3D sobre os motores do EH3D-DRILLPRO e do EH3D-ROUTEPRO; essa parte ainda não existe.
 
 ## 🧩 Papel no EH3D
 
-O EH3D-MOTIONCNC será o futuro programa de controlo de máquina do EH3D e, hoje, é apenas a sua base. Depende por caminho do EH3D-COMMON (a pasta `EH3D-COMMON` tem de estar ao lado desta) e de nenhum outro repositório do EH3D.
+O EH3D-MOTIONCNC é o programa de controlo de máquina do EH3D, hoje a funcionar sobre uma máquina simulada. Depende por caminho do EH3D-COMMON (a pasta `EH3D-COMMON` tem de estar ao lado desta: a vista, os temas, as palavras e os controladores) e de nenhum outro repositório EH3D por agora.
 
 ## 🏛️ Arquitetura
 
@@ -75,25 +75,26 @@ Como as partes se encaixam: quem o vai usar, o que este repositório contém e e
 
 ## 🔒 Segurança e proteção
 
-Este repositório não abre nenhuma porta série, nenhuma ligação de rede nem ficheiros de outras pessoas; o único texto externo que as suas partes leem é um ficheiro de tema escrito pelo utilizador, que é verificado em vez de aceite sem mais. Não comanda uma máquina e não é um sistema de segurança. Ver [SECURITY.md](SECURITY.md).
+Este programa não abre portas série, ligações de rede nem ficheiros de outras pessoas, exceto o ficheiro G-code que o operador escolhe (lido como texto, nunca executado por si). Comanda apenas uma máquina simulada e não é um sistema de segurança. Ver [SECURITY.md](SECURITY.md).
 
 ## 🚀 Início rápido
 
 Precisa de uma cadeia de ferramentas Rust estável e da pasta `EH3D-COMMON` ao lado desta.
 
 ```bash
-cargo build --release
-cargo test
-cargo clippy --all-targets -- -D warnings
+cargo build --release --features gui
+cargo test --features gui
+cargo clippy --all-targets --features gui -- -D warnings
 cargo fmt --all --check
 python -I tools/ci_validate.py
+cargo run --release --features gui -- examples/02_frame_and_pocket.nc
 ```
 
-`build.bat` / `build.sh` compilam a biblioteca, `test.bat` / `test.sh` executam os testes e `run.bat` / `run.sh` avisam de que ainda não há programa e executam os testes. Os scripts esperam por uma tecla no fim, a não ser que `NOPAUSE` esteja definido.
+`build.bat` / `build.sh` compilam o programa, `test.bat` / `test.sh` executam os testes e `run.bat` / `run.sh` abrem a janela com um programa de exemplo. Os scripts esperam uma tecla no fim, a menos que `NOPAUSE` esteja definido.
 
 ## 🧪 Testes
 
-`cargo test` indica 0 testes aqui: este repositório só reexporta a vista, cujos testes estão no EH3D-COMMON. A CI executa também `cargo fmt --check` e `cargo clippy` com os avisos como erros, e `python -I tools/ci_validate.py` verifica o manifesto, as versões, o registo de alterações e os oito README.
+`cargo test --features gui` executa 12 testes: a sessão (jog e zero, um programa linha a linha, pausa e continuar, uma linha recusada, a paragem de emergência e o alarme, o registo dos comandos, a referência), a trajetória de um programa e a linha de comandos; a vista e o controlador simulado são testados no EH3D-COMMON. A CI também executa `cargo fmt --check` e `cargo clippy` com avisos como erros, e `python -I tools/ci_validate.py` verifica o manifesto, as versões, o changelog e os oito README.
 
 ## 🏗️ Compilação e publicação
 
@@ -111,7 +112,13 @@ A versão está em `Cargo.toml` e em `eh3d.project.json`, e cada versão tem a s
 ```text
 EH3D-MOTIONCNC/
 ├── src/
-│   └── lib.rs                                   reexporta cena, textos e tema do eh3d-view do EH3D-COMMON
+│   ├── lib.rs                                   os módulos e a vista do eh3d-view reexportada com o nome deste programa
+│   ├── gui.rs                                   a janela: posição, jog, programa, trajetória, comandos e registo
+│   ├── session.rs                               o que se faz com um controlador: jog, zero, referência, um programa linha a linha, pausa, paragem, alarmes
+│   ├── gcode.rs                                 os movimentos retos de um programa G-code, para desenhar a sua trajetória
+│   ├── cli.rs                                   a linha de comandos: o ficheiro, o idioma, o tema e as opções de imagem
+│   └── bin/motioncnc.rs                         o programa que abre a janela
+├── examples/                                    três programas G-code de exemplo, de um quadrado a uma espiral longa
 ├── tools/                                       verificação de CI, do README e ferramentas de imagens
 ├── docs/                                        as fontes das imagens de Arquitetura e Estrutura do repositório
 ├── .github/                                     fluxo de CI, modelos de issues e pull requests
@@ -131,17 +138,17 @@ EH3D-MOTIONCNC/
 
 **Limites conhecidos hoje**
 
-* Não há ecrã nem controlo de máquina: nada aqui correu numa máquina.
-* Não há testes neste repositório; a vista é testada no EH3D-COMMON.
+* Nada aqui foi executado numa máquina real: o controlador é um simulador e não se abre nenhuma porta série nem ligação de rede.
+* O simulador só aceita G-code básico (`G0`, `G1`, `G90`, `G91`, `G20`, `G21`, `G92`, `M3` a `M9`); os arcos, os ciclos fixos e a apalpação são recusados, e a trajetória não desenha arcos.
 * Precisa da pasta `EH3D-COMMON` ao lado, porque depende dela por caminho.
 
 **A seguir**
 
-* Estudar os programas de controlo de máquina que existem hoje (um nativo e um .NET) para decidir do que o operador precisa.
-* Uma janela com a cena, os temas e os textos da interface.
-* Jog e G-code: ligação a uma máquina, primeiro num simulador.
-* Vistas 2D e 3D de um trabalho em curso.
-* Juntar os motores do EH3D-DRILLPRO e do EH3D-ROUTEPRO para que um só programa fure e frese.
+* Um controlador real: primeiro o GRBL por porta série, depois as outras famílias, depois o controlador do HYDRA-UMC.
+* Os arcos e o resto do G-code no simulador e na trajetória.
+* Uma vista 3D da trajetória com a altura dos cortes.
+* Apalpação, trocador de ferramentas e os materiais da máquina.
+* Juntar os motores do EH3D-DRILLPRO e do EH3D-ROUTEPRO para que um programa fure e frese.
 
 ## 🌍 Idiomas
 

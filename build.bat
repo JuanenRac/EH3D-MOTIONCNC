@@ -10,7 +10,7 @@ if not defined PRETTY_RUN if exist "%~dp0tools\pretty_run.py" (
     exit /b
 )
 rem PRETTY_RUN_END
-rem Builds the library. It needs the sibling folder EH3D-COMMON.
+rem Builds the program. It needs the sibling folder EH3D-COMMON.
 cd /d "%~dp0"
-cargo build --release
+cargo build --release --features gui
 if not defined NOPAUSE pause

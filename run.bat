@@ -1,9 +1,9 @@
 @echo off
-rem EH3D-MOTIONCNC has no program to run yet: so far it is the base (the view of a job, the themes and the words of the interface, shared
-rem through EH3D-COMMON). This script says so and runs the tests, which are what can be run today.
+rem Opens the EH3D machine-control window on a sample program (the simulated controller). It needs the sibling folder EH3D-COMMON.
 cd /d "%~dp0"
-echo EH3D-MOTIONCNC has no program yet (it is the base of the future machine-control program).
-echo For the drilling and routing windows run EH3D-BUNGARD-GUI. Running the tests here instead:
-echo.
-cargo test
+if "%~1"=="" (
+  cargo run --release --features gui -- examples\02_frame_and_pocket.nc
+) else (
+  cargo run --release --features gui -- %*
+)
 if not defined NOPAUSE pause

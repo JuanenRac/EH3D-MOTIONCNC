@@ -638,7 +638,7 @@ version = "0.0.1"
 
 [[package]]
 name = "eh3d-motioncnc"
-version = "0.0.5"
+version = "0.0.6"
 dependencies = [
  "eframe",
  "eh3d-controller",

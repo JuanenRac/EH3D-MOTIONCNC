@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.0.5] - No console window on Windows, all 37 languages and going on after a failure
+
 - **The names of the languages come from the texts:** the settings list the 37 languages, each in its own name.
 
 - **No black window on Windows:** the program no longer opens a console; started from a terminal it attaches to it, so the help and the errors are printed there as before.

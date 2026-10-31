@@ -10,5 +10,6 @@ pub mod gcode;
 pub mod gui;
 pub mod link;
 pub mod recovery;
+pub mod server;
 pub mod session;
 pub mod settings;

@@ -111,6 +111,19 @@
           }
         },
         {
+          "name": "server.rs",
+          "desc": {
+            "en": "the link to the EH3D server: send, follow, hold, stop",
+            "es": "el enlace con el servidor de EH3D: enviar, seguir, pausar, detener",
+            "de": "die Verbindung zum EH3D-Server: senden, verfolgen, anhalten, stoppen",
+            "fr": "la liaison au serveur EH3D : envoyer, suivre, mettre en pause, arrêter",
+            "it": "il collegamento al server EH3D: invia, segui, pausa, ferma",
+            "ja": "EH3D サーバーとの接続：送信、追跡、一時停止、停止",
+            "zh": "与 EH3D 服务器的连接：发送、跟踪、暂停、停止",
+            "pt": "a ligação ao servidor EH3D: enviar, acompanhar, pausar, parar"
+          }
+        },
+        {
           "name": "settings.rs",
           "desc": {
             "en": "what is kept between runs",
@@ -134,6 +147,19 @@
             "ja": "メニュー、設定、開く、保存、編集",
             "zh": "菜单、设置、打开、保存、编辑器",
             "pt": "menus, definições, Abrir, Guardar, editor"
+          }
+        },
+        {
+          "name": "gui/remote.rs",
+          "desc": {
+            "en": "the program on the server: Start, Pause, Stop and going on",
+            "es": "el programa en el servidor: Iniciar, Pausa, Detener y seguir",
+            "de": "das Programm auf dem Server: Start, Pause, Stopp und Fortsetzen",
+            "fr": "le programme sur le serveur : Démarrer, Pause, Arrêter et reprendre",
+            "it": "il programma sul server: Avvia, Pausa, Ferma e riprendi",
+            "ja": "サーバー上のプログラム：開始、一時停止、停止、再開",
+            "zh": "服务器上的程序：开始、暂停、停止与继续",
+            "pt": "o programa no servidor: Iniciar, Pausa, Parar e retomar"
           }
         }
       ]

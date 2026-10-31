@@ -12,15 +12,18 @@ pub struct Recovery {
     pub next: usize,
     /// How many lines the program has.
     pub total: usize,
+    /// The id of the job on the EH3D server when the program was sent to it (empty: the program ran on the controller of this computer).
+    pub job: String,
 }
 
 impl Recovery {
     pub fn to_text(&self) -> String {
         format!(
-            "file={}\nnext={}\ntotal={}\n",
+            "file={}\nnext={}\ntotal={}\njob={}\n",
             self.file.replace(['\r', '\n'], " "),
             self.next,
-            self.total
+            self.total,
+            self.job.replace(['\r', '\n'], " ")
         )
     }
 
@@ -39,6 +42,7 @@ impl Recovery {
                 }
                 "next" => r.next = v.trim().parse().ok()?,
                 "total" => r.total = v.trim().parse().ok()?,
+                "job" => r.job = v.trim().to_string(),
                 _ => {}
             }
         }
@@ -84,6 +88,7 @@ mod tests {
             file: "C:\\jobs\\board one.nc".to_string(),
             next: 120,
             total: 400,
+            job: "j1a2b3c4d".to_string(),
         };
         assert_eq!(Recovery::parse(&r.to_text()), Some(r));
     }
@@ -103,6 +108,7 @@ mod tests {
             file: "a.nc\nnext=0".to_string(),
             next: 5,
             total: 9,
+            job: String::new(),
         };
         let back = Recovery::parse(&r.to_text()).unwrap();
         assert_eq!(back.next, 5);
@@ -120,6 +126,7 @@ mod tests {
             file: "a.nc".into(),
             next: 3,
             total: 9,
+            job: String::new(),
         };
         r.save(&p).unwrap();
         assert_eq!(Recovery::load(&p), Some(r));

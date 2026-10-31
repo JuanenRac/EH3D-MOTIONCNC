@@ -613,7 +613,7 @@ dependencies = [
 
 [[package]]
 name = "eh3d-common"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "chrono",
  "semver",
@@ -645,6 +645,7 @@ dependencies = [
  "eh3d-filedialog",
  "eh3d-view",
  "png 0.17.16",
+ "serde_json",
 ]
 
 [[package]]

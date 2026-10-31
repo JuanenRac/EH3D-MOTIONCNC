@@ -31,6 +31,12 @@ pub struct Settings {
     pub recent: Vec<String>,
     /// The folder of the last file opened or saved.
     pub last_dir: String,
+    /// The EH3D server a program can be sent to: its address (`host:port`), the token of this program and the id of the machine on the server.
+    pub server_address: String,
+    pub server_token: String,
+    pub server_machine: String,
+    /// When a program goes on after a stop, also start the spindle and the coolant again as they were (off: the operator starts them).
+    pub server_restore_outputs: bool,
 }
 
 impl Default for Settings {
@@ -49,12 +55,21 @@ impl Default for Settings {
             show_rapids: true,
             recent: Vec::new(),
             last_dir: String::new(),
+            server_address: String::new(),
+            server_token: String::new(),
+            server_machine: String::new(),
+            server_restore_outputs: false,
         }
     }
 }
 
 fn on(v: &str) -> bool {
     !matches!(v.trim(), "no" | "off" | "false" | "0")
+}
+
+/// A value on one line: a line break in it could add keys to the file.
+fn one_line(v: &str) -> String {
+    v.replace(['\r', '\n'], " ").trim().to_string()
 }
 
 fn yes(b: bool) -> &'static str {
@@ -101,6 +116,10 @@ impl Settings {
                 "show_log" => s.show_log = on(v),
                 "show_rapids" => s.show_rapids = on(v),
                 "last_dir" => s.last_dir = v.to_string(),
+                "server_address" => s.server_address = v.to_string(),
+                "server_token" => s.server_token = v.to_string(),
+                "server_machine" => s.server_machine = v.to_string(),
+                "server_restore_outputs" => s.server_restore_outputs = on(v),
                 "recent" => {
                     s.recent = v
                         .split('|')
@@ -129,7 +148,7 @@ impl Settings {
     pub fn to_text(&self) -> String {
         let t = &self.travel;
         format!(
-            "lang = {}\ntheme = {}\nunits = {}\nstep = {}\nfeed = {}\nspindle = {}\nshow_buttons = {}\nshow_program = {}\nshow_log = {}\nshow_rapids = {}\ntravel_x = {},{}\ntravel_y = {},{}\ntravel_z = {},{}\nlast_dir = {}\nrecent = {}\n",
+            "lang = {}\ntheme = {}\nunits = {}\nstep = {}\nfeed = {}\nspindle = {}\nshow_buttons = {}\nshow_program = {}\nshow_log = {}\nshow_rapids = {}\ntravel_x = {},{}\ntravel_y = {},{}\ntravel_z = {},{}\nlast_dir = {}\nrecent = {}\nserver_address = {}\nserver_token = {}\nserver_machine = {}\nserver_restore_outputs = {}\n",
             self.lang.code(),
             self.theme.key(),
             if self.inches { "in" } else { "mm" },
@@ -147,7 +166,11 @@ impl Settings {
             t[2].0,
             t[2].1,
             self.last_dir,
-            self.recent.join("|")
+            self.recent.join("|"),
+            one_line(&self.server_address),
+            one_line(&self.server_token),
+            one_line(&self.server_machine),
+            yes(self.server_restore_outputs)
         )
     }
 
@@ -214,6 +237,10 @@ mod tests {
             show_rapids: false,
             recent: vec![],
             last_dir: "C:/jobs".into(),
+            server_address: "192.168.0.180:18200".into(),
+            server_token: "a-token".into(),
+            server_machine: "router".into(),
+            server_restore_outputs: true,
         };
         s.remember_recent("C:/jobs/a.nc");
         s.remember_recent("C:/jobs/b.nc");
@@ -228,6 +255,37 @@ mod tests {
             Settings::default()
         );
         let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn the_server_is_in_the_settings_file_empty_by_default_and_a_line_break_cannot_add_keys() {
+        let d = Settings::default();
+        assert_eq!(
+            (
+                d.server_address.as_str(),
+                d.server_token.as_str(),
+                d.server_machine.as_str(),
+                d.server_restore_outputs
+            ),
+            ("", "", "", false)
+        );
+        let s = Settings::parse(
+            "server_address = 10.0.0.2:18200\nserver_token = t\nserver_machine = m1\nserver_restore_outputs = yes\n",
+        );
+        assert_eq!(
+            (
+                s.server_address.as_str(),
+                s.server_token.as_str(),
+                s.server_machine.as_str(),
+                s.server_restore_outputs
+            ),
+            ("10.0.0.2:18200", "t", "m1", true)
+        );
+        let t = Settings {
+            server_token: "x\nlang = ja".into(),
+            ..Settings::default()
+        };
+        assert_eq!(Settings::parse(&t.to_text()).lang, Lang::En);
     }
 
     #[test]

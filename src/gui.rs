@@ -20,6 +20,7 @@ use crate::recovery::{self, Recovery};
 use crate::settings::{settings_path, Settings};
 
 mod dialogs;
+mod remote;
 use crate::gcode::{self, Segment};
 use crate::session::{Session, STEPS};
 use dialogs::{lang_name, Win};
@@ -145,6 +146,11 @@ pub struct App {
     shot: Option<Shot>,
     /// The line at which the recovery file was last written (None: nothing is saved for the program that runs).
     recovery_saved: Option<usize>,
+    /// The job on the EH3D server that is followed, what the server said of it the last time, and the last state and error that were written in the log.
+    server: Option<crate::server::Follow>,
+    server_snap: crate::server::Snapshot,
+    server_key: Option<(String, String)>,
+    server_err: Option<String>,
 }
 
 impl App {
@@ -185,6 +191,10 @@ impl App {
             frame: 0,
             start_at: o.start.then_some(4),
             recovery_saved: None,
+            server: None,
+            server_snap: crate::server::Snapshot::default(),
+            server_key: None,
+            server_err: None,
             shot: o.shot.clone().map(|file| Shot {
                 file,
                 wait: o.wait,
@@ -224,6 +234,7 @@ impl App {
                     file: self.path.clone(),
                     next: s.next,
                     total: s.program.len(),
+                    job: String::new(),
                 };
                 if r.save(&path).is_ok() {
                     self.recovery_saved = Some(s.next);
@@ -257,6 +268,13 @@ impl App {
     }
 
     fn state_text(&self) -> &'static str {
+        if self.server_busy() {
+            return if self.server_held() {
+                self.t(Text::McStHold)
+            } else {
+                self.t(Text::McStRun)
+            };
+        }
         if self.session.running && !self.session.paused {
             return self.t(Text::McStRun);
         }
@@ -722,39 +740,43 @@ impl App {
                     }
                 });
                 ui.horizontal(|ui| {
-                    let running = self.session.running && !self.session.paused;
                     if ui
-                        .add_enabled(!running, egui::Button::new(self.t(Text::Start)))
+                        .add_enabled(self.can_start(), egui::Button::new(self.t(Text::Start)))
                         .clicked()
                     {
-                        self.session.start();
+                        self.program_start();
                     }
                     if ui
-                        .add_enabled(running, egui::Button::new(self.t(Text::Pause)))
+                        .add_enabled(self.can_pause(), egui::Button::new(self.t(Text::Pause)))
                         .clicked()
                     {
-                        self.session.pause();
+                        self.program_pause();
+                    }
+                    if ui
+                        .add_enabled(self.can_stop(), egui::Button::new(self.t(Text::Stop)))
+                        .clicked()
+                    {
+                        self.program_stop();
                     }
                     if ui
                         .add_enabled(
-                            self.session.running || self.session.paused,
-                            egui::Button::new(self.t(Text::Stop)),
+                            self.can_send_to_server(),
+                            egui::Button::new(self.t(Text::McSendServer)),
                         )
                         .clicked()
                     {
-                        self.session.stop();
-                        self.forget_recovery();
+                        self.send_to_server(0);
                     }
                 });
                 ui.label(format!(
                     "{} {} / {}",
                     self.t(Text::McLine),
-                    self.session.next.min(self.session.program.len()),
+                    self.program_line(),
                     self.session.program.len()
                 ));
                 ui.separator();
-                let next = self.session.next;
-                let running = self.session.running;
+                let next = self.program_line();
+                let running = self.session.running || self.server_busy();
                 egui::ScrollArea::vertical()
                     .id_salt("program")
                     .auto_shrink([false, false])
@@ -953,6 +975,7 @@ impl eframe::App for App {
             ctx.request_repaint_after(std::time::Duration::from_millis(60));
         }
         self.track_recovery();
+        self.server_tick(&ctx);
         self.menu_bar(ui);
         self.top(ui);
         self.bottom(ui);

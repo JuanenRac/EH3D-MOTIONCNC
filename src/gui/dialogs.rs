@@ -222,30 +222,35 @@ impl App {
 
     fn menu_program(&mut self, ui: &mut egui::Ui) {
         ui.menu_button(self.t(Text::McProgram), |ui| {
-            let running = self.session.running && !self.session.paused;
             if ui
-                .add_enabled(!running, egui::Button::new(self.t(Text::Start)))
+                .add_enabled(self.can_start(), egui::Button::new(self.t(Text::Start)))
                 .clicked()
             {
-                self.session.start();
+                self.program_start();
                 ui.close();
             }
             if ui
-                .add_enabled(running, egui::Button::new(self.t(Text::Pause)))
+                .add_enabled(self.can_pause(), egui::Button::new(self.t(Text::Pause)))
                 .clicked()
             {
-                self.session.pause();
+                self.program_pause();
+                ui.close();
+            }
+            if ui
+                .add_enabled(self.can_stop(), egui::Button::new(self.t(Text::Stop)))
+                .clicked()
+            {
+                self.program_stop();
                 ui.close();
             }
             if ui
                 .add_enabled(
-                    self.session.running || self.session.paused,
-                    egui::Button::new(self.t(Text::Stop)),
+                    self.can_send_to_server(),
+                    egui::Button::new(self.t(Text::McSendServer)),
                 )
                 .clicked()
             {
-                self.session.stop();
-                self.forget_recovery();
+                self.send_to_server(0);
                 ui.close();
             }
             ui.separator();
@@ -388,7 +393,12 @@ impl App {
         match answer {
             Some(true) => {
                 self.open(Path::new(&r.file));
-                if self.session.program.len() == r.total {
+                if self.session.program.len() == r.total && !r.job.is_empty() {
+                    // the program was sent to the server: its job is followed again, or made again from the line it reached; the server waits for the
+                    // operator before the first move
+                    self.recovery_saved = Some(r.next);
+                    self.attach_to_server(r.job.clone(), r.next);
+                } else if self.session.program.len() == r.total {
                     // it waits paused: the operator checks the machine and presses Resume
                     self.session.resume_at(r.next);
                     self.recovery_saved = Some(r.next);
@@ -771,6 +781,7 @@ impl App {
                             Text::McSecInterface,
                             Text::McSecAxes,
                             Text::McSecJog,
+                            Text::McSecServer,
                         ]
                         .into_iter()
                         .enumerate()
@@ -867,6 +878,33 @@ impl App {
                                         t.1 = t.0 + 1.0;
                                     }
                                 }
+                            }
+                            4 => {
+                                egui::Grid::new("server")
+                                    .num_columns(2)
+                                    .spacing([10.0, 6.0])
+                                    .show(ui, |ui| {
+                                        ui.label(self.t(Text::McServerAddress));
+                                        ui.add(
+                                            egui::TextEdit::singleline(&mut d.s.server_address)
+                                                .desired_width(260.0)
+                                                .hint_text("192.168.0.180:18200"),
+                                        );
+                                        ui.end_row();
+                                        ui.label(self.t(Text::McServerToken));
+                                        ui.add(
+                                            egui::TextEdit::singleline(&mut d.s.server_token)
+                                                .desired_width(260.0)
+                                                .password(true),
+                                        );
+                                        ui.end_row();
+                                        ui.label(self.t(Text::McServerMachine));
+                                        ui.add(
+                                            egui::TextEdit::singleline(&mut d.s.server_machine)
+                                                .desired_width(260.0),
+                                        );
+                                        ui.end_row();
+                                    });
                             }
                             _ => {
                                 ui.label(self.t(Text::McDefaultStep));

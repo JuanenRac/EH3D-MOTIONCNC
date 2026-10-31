@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The names of the languages come from the texts:** the settings list the 37 languages, each in its own name.
+
 - **No black window on Windows:** the program no longer opens a console; started from a terminal it attaches to it, so the help and the errors are printed there as before.
 
 - **Going on after a failure:** while a program runs, the line it has reached is saved to a small file next to the settings; at the next start the window asks whether to go on from that line or to leave it, and nothing is sent to the controller until the operator answers.

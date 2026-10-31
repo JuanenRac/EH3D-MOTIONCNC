@@ -921,16 +921,7 @@ impl App {
 
 /// The name of a language, in that language.
 pub(super) fn lang_name(l: Lang) -> &'static str {
-    match l {
-        Lang::En => "English",
-        Lang::Es => "Español",
-        Lang::It => "Italiano",
-        Lang::De => "Deutsch",
-        Lang::Fr => "Français",
-        Lang::Pt => "Português",
-        Lang::Zh => "中文",
-        Lang::Ja => "日本語",
-    }
+    l.native_name()
 }
 
 #[cfg(test)]

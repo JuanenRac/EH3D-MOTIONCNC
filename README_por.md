@@ -19,7 +19,7 @@
 
 ---
 
-**Verificação de honestidade - o que funciona hoje:** um programa em Rust com uma janela (`motioncnc`) que comanda uma máquina **simulada**: mostra a posição da máquina (peça e máquina), move-a à mão com um teclado de jog, põe o zero, faz a referência, aceita os comandos escritos pelo operador, executa um programa G-code linha a linha (com pausa, paragem e paragem de emergência), desenha a trajetória do programa na mesa com as linhas feitas marcadas e pára no que o controlador recusa. A janela fala oito idiomas e tem cinco temas. A interface de controladores (`eh3d-controller`, no EH3D-COMMON) tem o GRBL escrito contra uma linha simulada e lista as outras famílias como ainda sem controlador. 30 testes correm num computador. **Nada aqui foi executado numa máquina real**, não se abre nenhuma porta série nem ligação de rede, e os arcos e os outros códigos o simulador nem os desenha nem os executa.
+**Verificação de honestidade - o que funciona hoje:** um programa em Rust com uma janela (`motioncnc`) que comanda uma máquina **simulada**: mostra a posição da máquina (peça e máquina), move-a à mão com um teclado de jog, põe o zero, faz a referência, aceita os comandos escritos pelo operador, executa um programa G-code linha a linha (com pausa, paragem e paragem de emergência), desenha a trajetória do programa na mesa com as linhas feitas marcadas e pára no que o controlador recusa. A janela fala 37 idiomas e tem onze temas. A interface de controladores (`eh3d-controller`, no EH3D-COMMON) tem o GRBL escrito contra uma linha simulada e lista as outras famílias como ainda sem controlador. 30 testes correm num computador. **Nada aqui foi executado numa máquina real**, não se abre nenhuma porta série nem ligação de rede, e os arcos e os outros códigos o simulador nem os desenha nem os executa.
 
 ---
 
@@ -47,7 +47,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. Esc
 |---|---|---|
 | Biblioteca base | 🟡 | Um crate de Rust que reexporta `scene`, `texts` e `theme` do `eh3d-view` com o nome deste programa; precisa da pasta do EH3D-COMMON ao lado. |
 | Cena e vistas | 🟡 | Escrita e testada no EH3D-COMMON; a janela deste programa desenha a trajetória de um programa na mesa e a posição da ferramenta (vista num computador). |
-| Temas e textos | 🟡 | Cinco temas e as palavras da interface em oito idiomas, vistos na janela deste programa. |
+| Temas e textos | 🟡 | Onze temas e as palavras da interface em 37 idiomas, vistos na janela deste programa. |
 | Testes | 🟡 | Passam 30 testes num computador (`cargo test --features gui`): a sessão (jog, zero, referência, um programa, pausa, alarme, paragem de emergência), a trajetória de um programa e a linha de comandos; o controlador simulado é testado no EH3D-COMMON. |
 | Janela e jog | 🟡 | Funciona num computador com o controlador simulado: posição, teclado de jog, passos, avanço, referência, zero, desbloqueio, uma linha de comandos e um registo; sem máquina real. |
 | Controlo de máquina | 🟠 | Só o simulador: um programa corre linha a linha com pausa, paragem e paragem de emergência; ainda não se liga nenhum controlador real a partir daqui. |

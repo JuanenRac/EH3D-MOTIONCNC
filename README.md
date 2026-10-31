@@ -19,7 +19,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** a Rust program with a window (`motioncnc`) that drives a **simulated** machine: it shows the position of the machine (work and machine), moves it by hand with a jog pad, sets the zero, homes, takes the commands typed by the operator, runs a G-code program line by line (with pause, stop and the emergency stop), draws the path of the program on the table with the lines done marked, and stops at what the controller refuses. The window speaks eight languages and wears five themes. The controller interface (`eh3d-controller`, in EH3D-COMMON) has GRBL written against a scripted line and lists the other families as not driven yet. 30 tests run on a computer. **Nothing here has run on a real machine**, no serial port or network connection is opened, and arcs and the other codes are neither drawn nor run by the simulator.
+**Honesty check - what actually runs today:** a Rust program with a window (`motioncnc`) that drives a **simulated** machine: it shows the position of the machine (work and machine), moves it by hand with a jog pad, sets the zero, homes, takes the commands typed by the operator, runs a G-code program line by line (with pause, stop and the emergency stop), draws the path of the program on the table with the lines done marked, and stops at what the controller refuses. The window speaks 37 languages and wears eleven themes. The controller interface (`eh3d-controller`, in EH3D-COMMON) has GRBL written against a scripted line and lists the other families as not driven yet. 30 tests run on a computer. **Nothing here has run on a real machine**, no serial port or network connection is opened, and arcs and the other codes are neither drawn nor run by the simulator.
 
 ---
 
@@ -47,7 +47,7 @@ Each line is one part of this repository and the light says how far it is today.
 |---|---|---|
 | Base library | 🟡 | A Rust crate that re-exports `scene`, `texts` and `theme` of `eh3d-view` under this program's name; it needs the folder of EH3D-COMMON next to it. |
 | Scene and views | 🟡 | Written and tested in EH3D-COMMON; the window of this program draws the path of a program on the table and the position of the tool (seen on a computer). |
-| Themes and texts | 🟡 | Five themes and the words of the interface in eight languages, seen in the window of this program. |
+| Themes and texts | 🟡 | Eleven themes and the words of the interface in 37 languages, seen in the window of this program. |
 | Tests | 🟡 | 30 tests pass on a computer (`cargo test --features gui`): the session (jog, zero, home, a program, pause, alarm, emergency stop), the path of a program and the command line; the simulated controller is tested in EH3D-COMMON. |
 | Window and jog | 🟡 | Works on a computer with the simulated controller: position, jog pad, steps, feed, home, zero, unlock, a line of commands and a log; no real machine. |
 | Machine control | 🟠 | Only the simulator: a program runs line by line with pause, stop and the emergency stop; no real controller is connected from here yet. |

@@ -19,7 +19,7 @@
 
 ---
 
-**Verifica di onestà - cosa funziona oggi:** un programma Rust con una finestra (`motioncnc`) che pilota una macchina **simulata**: mostra la posizione della macchina (pezzo e macchina), la sposta a mano con un tastierino di jog, imposta lo zero, esegue l'origine, accetta i comandi digitati dall'operatore, esegue un programma G-code riga per riga (con pausa, stop e arresto di emergenza), disegna il percorso del programma sul piano con le righe eseguite segnate e si ferma su ciò che il controllore rifiuta. La finestra parla otto lingue e porta cinque temi. L'interfaccia dei controllori (`eh3d-controller`, in EH3D-COMMON) ha GRBL scritto contro una linea simulata ed elenca le altre famiglie come non ancora pilotate. 30 test girano su un computer. **Nulla di qui è stato eseguito su una macchina reale**, non si apre alcuna porta seriale né connessione di rete, e gli archi e gli altri codici il simulatore non li disegna né li esegue.
+**Verifica di onestà - cosa funziona oggi:** un programma Rust con una finestra (`motioncnc`) che pilota una macchina **simulata**: mostra la posizione della macchina (pezzo e macchina), la sposta a mano con un tastierino di jog, imposta lo zero, esegue l'origine, accetta i comandi digitati dall'operatore, esegue un programma G-code riga per riga (con pausa, stop e arresto di emergenza), disegna il percorso del programma sul piano con le righe eseguite segnate e si ferma su ciò che il controllore rifiuta. La finestra parla 37 lingue e porta undici temi. L'interfaccia dei controllori (`eh3d-controller`, in EH3D-COMMON) ha GRBL scritto contro una linea simulata ed elenca le altre famiglie come non ancora pilotate. 30 test girano su un computer. **Nulla di qui è stato eseguito su una macchina reale**, non si apre alcuna porta seriale né connessione di rete, e gli archi e gli altri codici il simulatore non li disegna né li esegue.
 
 ---
 
@@ -47,7 +47,7 @@ Ogni riga è una parte di questo repository e la luce dice a che punto è oggi. 
 |---|---|---|
 | Libreria di base | 🟡 | Un crate Rust che riesporta `scene`, `texts` e `theme` di `eh3d-view` con il nome di questo programma; richiede la cartella di EH3D-COMMON accanto. |
 | Scena e viste | 🟡 | Scritta e provata in EH3D-COMMON; la finestra di questo programma disegna il percorso di un programma sul piano e la posizione dell'utensile (vista su un computer). |
-| Temi e testi | 🟡 | Cinque temi e le parole dell'interfaccia in otto lingue, viste nella finestra di questo programma. |
+| Temi e testi | 🟡 | Undici temi e le parole dell'interfaccia in 37 lingue, viste nella finestra di questo programma. |
 | Test | 🟡 | 30 test passano su un computer (`cargo test --features gui`): la sessione (jog, zero, origine, un programma, pausa, allarme, arresto di emergenza), il percorso di un programma e la riga di comando; il controllore simulato è provato in EH3D-COMMON. |
 | Finestra e jog | 🟡 | Funziona su un computer con il controllore simulato: posizione, tastierino di jog, passi, avanzamento, origine, zero, sblocco, una riga di comandi e un registro; nessuna macchina reale. |
 | Controllo della macchina | 🟠 | Solo il simulatore: un programma gira riga per riga con pausa, stop e arresto di emergenza; da qui non è ancora collegato alcun controllore reale. |

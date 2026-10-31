@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Going on after a failure:** while a program runs, the line it has reached is saved to a small file next to the settings; at the next start the window asks whether to go on from that line or to leave it, and nothing is sent to the controller until the operator answers.
+- **Tests:** the file that is saved and read back, the line that is due to be saved and a file that is damaged are checked (30 tests now).
+
 ## [0.0.4] - A serial link to GRBL, menus and a left panel like PlanetCNC, and a window that follows the screen
 
 - **The window opens maximized and follows the size of the screen:** from 720p to 1080p and on to larger and wider screens everything grows or shrinks with the window.

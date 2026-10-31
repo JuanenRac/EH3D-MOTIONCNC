@@ -9,5 +9,6 @@ pub mod gcode;
 #[cfg(feature = "gui")]
 pub mod gui;
 pub mod link;
+pub mod recovery;
 pub mod session;
 pub mod settings;

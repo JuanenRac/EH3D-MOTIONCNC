@@ -14,12 +14,12 @@
   <img src="https://img.shields.io/badge/Languages-8-00E5FF.svg" alt="Languages">
   <img src="https://img.shields.io/badge/Version-0.0.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-scaffolding-FFB020.svg" alt="Maturity">
-  <img src="https://img.shields.io/badge/Tests-25-0f6cbd.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-30-0f6cbd.svg" alt="Tests">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** a Rust program with a window (`motioncnc`) that drives a **simulated** machine: it shows the position of the machine (work and machine), moves it by hand with a jog pad, sets the zero, homes, takes the commands typed by the operator, runs a G-code program line by line (with pause, stop and the emergency stop), draws the path of the program on the table with the lines done marked, and stops at what the controller refuses. The window speaks eight languages and wears five themes. The controller interface (`eh3d-controller`, in EH3D-COMMON) has GRBL written against a scripted line and lists the other families as not driven yet. 25 tests run on a computer. **Nothing here has run on a real machine**, no serial port or network connection is opened, and arcs and the other codes are neither drawn nor run by the simulator.
+**Honesty check - what actually runs today:** a Rust program with a window (`motioncnc`) that drives a **simulated** machine: it shows the position of the machine (work and machine), moves it by hand with a jog pad, sets the zero, homes, takes the commands typed by the operator, runs a G-code program line by line (with pause, stop and the emergency stop), draws the path of the program on the table with the lines done marked, and stops at what the controller refuses. The window speaks eight languages and wears five themes. The controller interface (`eh3d-controller`, in EH3D-COMMON) has GRBL written against a scripted line and lists the other families as not driven yet. 30 tests run on a computer. **Nothing here has run on a real machine**, no serial port or network connection is opened, and arcs and the other codes are neither drawn nor run by the simulator.
 
 ---
 
@@ -31,7 +31,7 @@
 |---|---|
 | Version | `0.0.4` |
 | Maturity | Scaffolding |
-| Tests | 25 |
+| Tests | 30 |
 | Stack | Rust |
 | On real hardware | No: it drives only a simulated machine |
 
@@ -48,7 +48,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Base library | 🟡 | A Rust crate that re-exports `scene`, `texts` and `theme` of `eh3d-view` under this program's name; it needs the folder of EH3D-COMMON next to it. |
 | Scene and views | 🟡 | Written and tested in EH3D-COMMON; the window of this program draws the path of a program on the table and the position of the tool (seen on a computer). |
 | Themes and texts | 🟡 | Five themes and the words of the interface in eight languages, seen in the window of this program. |
-| Tests | 🟡 | 25 tests pass on a computer (`cargo test --features gui`): the session (jog, zero, home, a program, pause, alarm, emergency stop), the path of a program and the command line; the simulated controller is tested in EH3D-COMMON. |
+| Tests | 🟡 | 30 tests pass on a computer (`cargo test --features gui`): the session (jog, zero, home, a program, pause, alarm, emergency stop), the path of a program and the command line; the simulated controller is tested in EH3D-COMMON. |
 | Window and jog | 🟡 | Works on a computer with the simulated controller: position, jog pad, steps, feed, home, zero, unlock, a line of commands and a log; no real machine. |
 | Machine control | 🟠 | Only the simulator: a program runs line by line with pause, stop and the emergency stop; no real controller is connected from here yet. |
 | Documentation | 🟡 | README in eight languages, the two pictures, three sample programs and the changelog. |
@@ -63,6 +63,7 @@ Each line is one part of this repository and the light says how far it is today.
 * The **menus, the settings and the files**: the menus File, View, Program, Machine and Help with what PlanetCNC has in them (open, recent files, save, edit, the zeros, the stored positions, the spindle and the coolant); a settings window (units, language, eleven themes, travel limits, jog) that is kept between runs; and the Open and Save windows of the suite (`eh3d-filedialog`: places, sorting, filters, the extension of a saved file and the question before a file is replaced).
 * **GRBL on a serial port:** built with `--features serial`, `motioncnc --grbl PORT[@BAUD]` drives a GRBL controller (115200 baud by default) instead of the simulator and `motioncnc --ports` lists the serial ports; a build without the feature, or a port that does not open, says so and leaves. It has been tried only against a scripted controller, never against a real one.
 * **A window that follows the screen:** it opens maximized, and from 720p to 1080p and on to larger and wider screens everything grows or shrinks with it.
+* **Going on after a failure:** while a program runs, the line it has reached is saved to a small file; if the window, the computer or the link goes down, the next start asks whether to go on from that line or to leave it. Nothing is sent to the controller until the operator answers.
 
 ## 🧩 Role in EH3D
 
@@ -129,7 +130,7 @@ cargo run --release --features gui -- examples/02_frame_and_pocket.nc
 
 ## 🧪 Testing
 
-`cargo test --features gui` runs 25 tests: the session (jog and zero, a program run line by line, pause and go on, a refused line, the emergency stop and the alarm, the log of the commands, homing), the path of a program and the command line; the view and the simulated controller are tested in EH3D-COMMON. The CI also runs `cargo fmt --check` and `cargo clippy` with warnings as errors, and `python -I tools/ci_validate.py` checks the manifest, the versions, the changelog and the eight READMEs.
+`cargo test --features gui` runs 30 tests: the session (jog and zero, a program run line by line, pause and go on, a refused line, the emergency stop and the alarm, the log of the commands, homing), the path of a program and the command line; the view and the simulated controller are tested in EH3D-COMMON. The CI also runs `cargo fmt --check` and `cargo clippy` with warnings as errors, and `python -I tools/ci_validate.py` checks the manifest, the versions, the changelog and the eight READMEs.
 
 ## 🏗️ Build & Release
 

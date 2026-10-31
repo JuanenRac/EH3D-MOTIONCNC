@@ -22,6 +22,8 @@ pub(super) enum Win {
     Replace(Box<Browser>, PathBuf),
     Edit(String),
     About,
+    /// A program was left in the middle: go on from its line or leave it.
+    Resume(crate::recovery::Recovery),
 }
 
 /// The settings as they are being changed; they take effect with Ok.
@@ -243,6 +245,7 @@ impl App {
                 .clicked()
             {
                 self.session.stop();
+                self.forget_recovery();
                 ui.close();
             }
             ui.separator();
@@ -347,6 +350,7 @@ impl App {
             Win::Replace(b, p) => self.replace_window(ctx, b, p),
             Win::Edit(t) => self.edit_window(ctx, t),
             Win::About => self.about_window(ctx),
+            Win::Resume(r) => self.resume_window(ctx, r),
         };
     }
 
@@ -354,6 +358,52 @@ impl App {
         egui::Window::new(title.to_string())
             .collapsible(false)
             .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
+    }
+
+    fn resume_window(&mut self, ctx: &egui::Context, r: crate::recovery::Recovery) -> Option<Win> {
+        let mut answer: Option<bool> = None;
+        self.window(self.t(Text::ResumeTitle))
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.label(self.t(Text::ResumeBody));
+                ui.add_space(6.0);
+                ui.label(format!(
+                    "{}: {} / {}",
+                    Path::new(&r.file)
+                        .file_name()
+                        .map_or_else(String::new, |n| n.to_string_lossy().to_string()),
+                    r.next + 1,
+                    r.total
+                ));
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    if ui.button(self.t(Text::ResumeContinue)).clicked() {
+                        answer = Some(true);
+                    }
+                    if ui.button(self.t(Text::ResumeCancel)).clicked() {
+                        answer = Some(false);
+                    }
+                });
+            });
+        match answer {
+            Some(true) => {
+                self.open(Path::new(&r.file));
+                if self.session.program.len() == r.total {
+                    // it waits paused: the operator checks the machine and presses Resume
+                    self.session.resume_at(r.next);
+                    self.recovery_saved = Some(r.next);
+                } else {
+                    // the file is not the one that was running (it changed): nothing is safe to go on from
+                    self.forget_recovery();
+                }
+                None
+            }
+            Some(false) => {
+                self.forget_recovery();
+                None
+            }
+            None => Some(Win::Resume(r)),
+        }
     }
 
     fn about_window(&mut self, ctx: &egui::Context) -> Option<Win> {

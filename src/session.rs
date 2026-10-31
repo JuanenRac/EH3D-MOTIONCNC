@@ -253,6 +253,23 @@ impl Session {
         self.running = true;
     }
 
+    /// Goes on with a program that was left in the middle: the codes in force are rebuilt from the lines that were sent, and the program waits paused at `next`,
+    /// so the operator looks at the machine (where the tool is, the spindle) before it moves again.
+    pub fn resume_at(&mut self, next: usize) {
+        let next = next.min(self.program.len());
+        self.modal = Modal::default();
+        for line in &self.program[..next] {
+            let t = line.trim();
+            if !t.is_empty() && !t.starts_with(';') {
+                self.modal.apply(t);
+            }
+        }
+        self.next = next;
+        self.running = true;
+        self.paused = true;
+        self.say(format!("program resumed at line {}", next + 1));
+    }
+
     pub fn pause(&mut self) {
         if self.running && !self.paused {
             self.paused = true;
@@ -296,6 +313,29 @@ impl Session {
 mod tests {
     use super::*;
     use eh3d_controller::sim::SimController;
+
+    #[test]
+    fn a_program_left_in_the_middle_goes_on_paused_with_its_codes_rebuilt() {
+        let mut s = Session::new(Box::new(SimController::new()));
+        s.load("G21\nG91\nG0 X1\nG0 X1\nG0 X1\n");
+        s.resume_at(3);
+        assert!(s.running && s.paused && s.next == 3);
+        assert!(
+            s.modal == {
+                let mut m = Modal::default();
+                m.apply("G21");
+                m.apply("G91");
+                m.apply("G0 X1");
+                m
+            }
+        );
+        // nothing is sent until the operator resumes
+        s.pump(10);
+        assert_eq!(s.next, 3);
+        // a line past the end is the end
+        s.resume_at(99);
+        assert_eq!(s.next, s.program.len());
+    }
 
     fn session() -> Session {
         Session::new(Box::new(SimController::new()))

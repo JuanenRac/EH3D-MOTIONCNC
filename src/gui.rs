@@ -16,6 +16,7 @@ use eh3d_view::texts::{tr, Lang, Text};
 use eh3d_view::theme::{Rgb, Theme, ThemeId};
 
 use crate::cli::Options;
+use crate::recovery::{self, Recovery};
 use crate::settings::{settings_path, Settings};
 
 mod dialogs;
@@ -142,6 +143,8 @@ pub struct App {
     frame: u32,
     start_at: Option<u32>,
     shot: Option<Shot>,
+    /// The line at which the recovery file was last written (None: nothing is saved for the program that runs).
+    recovery_saved: Option<usize>,
 }
 
 impl App {
@@ -181,6 +184,7 @@ impl App {
             path_toolpath: Vec::new(),
             frame: 0,
             start_at: o.start.then_some(4),
+            recovery_saved: None,
             shot: o.shot.clone().map(|file| Shot {
                 file,
                 wait: o.wait,
@@ -190,6 +194,16 @@ impl App {
         if let Some(f) = &o.file {
             app.open(f);
         }
+        // a program that was left in the middle by a crash or by a link that went down: the operator chooses to go on or to leave it
+        if o.file.is_none() && o.window.is_none() && o.shot.is_none() && !cfg!(test) {
+            if let Some(r) = Recovery::load(&recovery::recovery_path(&app.settings_path)) {
+                if Path::new(&r.file).is_file() {
+                    app.win = Some(dialogs::Win::Resume(r));
+                } else {
+                    Recovery::clear(&recovery::recovery_path(&app.settings_path));
+                }
+            }
+        }
         if let Some(w) = &o.window {
             app.open_window(w);
         }
@@ -198,6 +212,34 @@ impl App {
 
     fn t(&self, text: Text) -> &'static str {
         tr(self.lang, text)
+    }
+
+    /// Keeps the line the program has reached in a file while it runs, and takes the file away when the program is over: a crash leaves it for the next start.
+    fn track_recovery(&mut self) {
+        let path = recovery::recovery_path(&self.settings_path);
+        let s = &self.session;
+        if s.running && !self.path.is_empty() && !cfg!(test) {
+            if recovery::due(self.recovery_saved, s.next, 20) {
+                let r = Recovery {
+                    file: self.path.clone(),
+                    next: s.next,
+                    total: s.program.len(),
+                };
+                if r.save(&path).is_ok() {
+                    self.recovery_saved = Some(s.next);
+                }
+            }
+        } else if self.recovery_saved.is_some() && s.next >= s.program.len() {
+            // the program reached its end
+            Recovery::clear(&path);
+            self.recovery_saved = None;
+        }
+    }
+
+    /// The operator stopped the program on purpose: nothing is left to go on from.
+    fn forget_recovery(&mut self) {
+        Recovery::clear(&recovery::recovery_path(&self.settings_path));
+        self.recovery_saved = None;
     }
 
     /// Takes a G-code file as the program.
@@ -701,6 +743,7 @@ impl App {
                         .clicked()
                     {
                         self.session.stop();
+                        self.forget_recovery();
                     }
                 });
                 ui.label(format!(
@@ -909,6 +952,7 @@ impl eframe::App for App {
             self.session.pump(1);
             ctx.request_repaint_after(std::time::Duration::from_millis(60));
         }
+        self.track_recovery();
         self.menu_bar(ui);
         self.top(ui);
         self.bottom(ui);

@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **G90.1 and G91.1 are no longer read as G90 and G91:** the preview and the modal panel keep the distance mode when a program sets the arc-centre mode in its header.
+
 ## [0.0.6] - Send the program to the server, pause, resume and go on after a failure
 
 - **The program sent to the EH3D server:** the settings (section Server of the window, or `server_address`, `server_token` and `server_machine` in the settings file, the token hidden in the window) say where the server is, who this program is on it and which machine it works for. **Program > Send to the server** (and a button beside Start) sends the text of the program as a G-code job and starts it; the window follows it on a thread of its own (the state, the percentage and the line reached in the top bar, the program panel and the log), Start, Pause and Stop reach the job on the server, a stop is a stop of the machine there, and closing the window leaves the job running. Tested against a stand-in server (the request, the following, the orders, a refusal, the job made again from a line); the server's own tests send the same requests to its simulator.

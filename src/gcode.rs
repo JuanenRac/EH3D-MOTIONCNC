@@ -46,13 +46,14 @@ pub fn toolpath(lines: &[String]) -> Vec<Segment> {
             let (letter, num) = w.split_at(1);
             let Ok(v) = num.parse::<f64>() else { continue };
             match letter {
-                "G" => match v as i32 {
+                // in tenths, so that G90.1 and G91.1 (the arc centres) are not read as G90 and G91
+                "G" => match (v * 10.0).round() as i32 {
                     0 => rapid = true,
-                    1 => rapid = false,
-                    90 => absolute = true,
-                    91 => absolute = false,
-                    20 => scale = 25.4,
-                    21 => scale = 1.0,
+                    10 => rapid = false,
+                    900 => absolute = true,
+                    910 => absolute = false,
+                    200 => scale = 25.4,
+                    210 => scale = 1.0,
                     _ => {}
                 },
                 "X" => target[0] = Some(v * scale),
@@ -148,13 +149,15 @@ impl Modal {
     /// Takes a line that the controller accepted.
     pub fn apply(&mut self, line: &str) {
         for (l, v) in words(line) {
+            // a G code is read in tenths (G91.1 is 911, not G91); an M code is a whole number
+            let tenths = (v * 10.0).round() as i32;
             match (l, v as i32) {
-                ('G', 0) => self.motion = 0,
-                ('G', 1) => self.motion = 1,
-                ('G', 20) => self.inches = true,
-                ('G', 21) => self.inches = false,
-                ('G', 90) => self.absolute = true,
-                ('G', 91) => self.absolute = false,
+                ('G', _) if tenths == 0 => self.motion = 0,
+                ('G', _) if tenths == 10 => self.motion = 1,
+                ('G', _) if tenths == 200 => self.inches = true,
+                ('G', _) if tenths == 210 => self.inches = false,
+                ('G', _) if tenths == 900 => self.absolute = true,
+                ('G', _) if tenths == 910 => self.absolute = false,
                 ('M', n @ (3..=5)) => self.spindle = n as u8,
                 ('M', n @ (7..=9)) => self.coolant = n as u8,
                 ('M', 2 | 30) => {
@@ -220,6 +223,23 @@ mod tests {
         let p = toolpath(&lines("G91\nG1 X5\nG1 X5\nG90 G20\nG0 X1"));
         assert_eq!(p[1].to.0, 10.0);
         assert!((p[2].to.0 - 25.4).abs() < 1e-9);
+    }
+
+    #[test]
+    fn the_arc_centre_modes_are_not_the_distance_modes() {
+        // G91.1 (relative arc centres) in the header must not make the moves incremental
+        let p = toolpath(&lines("G90 G91.1\nG1 X5\nG1 X8"));
+        assert_eq!(p[1].to.0, 8.0);
+        let mut m = Modal::default();
+        m.apply("G90 G91.1");
+        assert!(m.absolute);
+        m.apply("G91");
+        assert!(!m.absolute);
+        m.apply("G90.1");
+        assert!(
+            !m.absolute,
+            "G90.1 does not bring back the absolute distances"
+        );
     }
 
     #[test]

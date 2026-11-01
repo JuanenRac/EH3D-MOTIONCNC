@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The stop of a program sent to the server stops the machine:** it asks for `POST /machines/:id/stop` (and cancels the job on a server that does not have it).
+
 - **A program left in the middle goes on from a safe state:** when it is resumed, the controller is first told the units, the absolute distances, a safe Z (`resume_safe_z`, 5 mm by default), the spindle and the time it gets to reach its speed (`resume_spindle_wait`, 3 s), the coolant, the point the program had reached and then the modal state of the program; the recovery file keeps the SHA-256 of the program and refuses to go on from a program that changed.
 
 - **G90.1 and G91.1 are no longer read as G90 and G91:** the preview and the modal panel keep the distance mode when a program sets the arc-centre mode in its header.

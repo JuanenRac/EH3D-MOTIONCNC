@@ -189,6 +189,13 @@ impl Client {
     }
 
     pub fn order(&self, id: &str, what: Order) -> Result<(), String> {
+        if what == Order::Cancel {
+            // the stop button reaches the machine at once, without waiting for the line the server is sending; a server that does not have it cancels the job
+            let stop = format!("/api/v1/machines/{}/stop", self.machine);
+            if self.ok("POST", &stop, None).is_ok() {
+                return Ok(());
+            }
+        }
         self.ok("POST", &format!("/api/v1/jobs/{id}/{}", what.word()), None)
             .map(|_| ())
     }
@@ -598,5 +605,16 @@ mod tests {
         };
         assert!(c.order("j2", Order::Pause).is_ok());
         assert!(c.order("j2", Order::Cancel).is_err());
+        // the stop goes to the machine, not to the job
+        let c = Client {
+            address: stand_in(vec![(
+                "POST /api/v1/machines/router/stop",
+                r#"{"ok":true,"stopped":true}"#.into(),
+            )])
+            .0,
+            token: "secret".into(),
+            machine: "router".into(),
+        };
+        assert!(c.order("j2", Order::Cancel).is_ok());
     }
 }

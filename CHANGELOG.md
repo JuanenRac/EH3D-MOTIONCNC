@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Cut, copy and paste work in every text box:** the window was built without the clipboard, so none of the keys (Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+Insert, Shift+Insert, Shift+Delete) did anything. All the boxes (the file and folder names, the server address, token and machine, the command line, the program path and the log) take them, and the right button opens a menu with Cut, Copy, Paste, Select all and Undo, greyed out where they do not apply and named in the 37 languages.
+
 - **The stop of a program sent to the server stops the machine:** it asks for `POST /machines/:id/stop` (and cancels the job on a server that does not have it).
 
 - **A program left in the middle goes on from a safe state:** when it is resumed, the controller is first told the units, the absolute distances, a safe Z (`resume_safe_z`, 5 mm by default), the spindle and the time it gets to reach its speed (`resume_spindle_wait`, 3 s), the coolant, the point the program had reached and then the modal state of the program; the recovery file keeps the SHA-256 of the program and refuses to go on from a program that changed.

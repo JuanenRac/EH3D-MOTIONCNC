@@ -19,6 +19,7 @@ use crate::cli::Options;
 use crate::recovery::{self, Recovery};
 use crate::settings::{settings_path, Settings};
 
+mod clipmenu;
 mod dialogs;
 mod remote;
 use crate::gcode::{self, Segment};
@@ -730,7 +731,8 @@ impl App {
                         .color(col(self.theme.accent)),
                 );
                 ui.horizontal(|ui| {
-                    ui.add(
+                    clipmenu::text_box(
+                        ui,
                         egui::TextEdit::singleline(&mut self.path)
                             .desired_width(190.0)
                             .hint_text("job.nc"),
@@ -809,7 +811,8 @@ impl App {
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
                     ui.label(self.t(Text::McMdi));
-                    let r = ui.add(
+                    let r = clipmenu::text_box(
+                        ui,
                         egui::TextEdit::singleline(&mut self.mdi)
                             .desired_width(420.0)
                             .font(egui::TextStyle::Monospace)
@@ -948,6 +951,7 @@ impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.frame += 1;
+        clipmenu::start_frame(&ctx, self.lang);
         // the window follows its size: from 720p to 1080p and on to the large and the wide screens everything grows or shrinks with it
         let native = ctx.content_rect().size() * ctx.zoom_factor();
         let zoom = (native.x / 1400.0).min(native.y / 800.0).clamp(0.75, 3.0);

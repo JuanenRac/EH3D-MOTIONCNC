@@ -452,7 +452,8 @@ impl App {
                 egui::ScrollArea::vertical()
                     .max_height(380.0)
                     .show(ui, |ui| {
-                        ui.add(
+                        super::clipmenu::text_box(
+                            ui,
                             egui::TextEdit::multiline(&mut text)
                                 .font(egui::TextStyle::Monospace)
                                 .desired_width(f32::INFINITY)
@@ -552,7 +553,8 @@ impl App {
                     if ui.button("^").on_hover_text(self.t(Text::NavUp)).clicked() {
                         b.up();
                     }
-                    let r = ui.add(
+                    let r = super::clipmenu::text_box(
+                        ui,
                         egui::TextEdit::singleline(&mut b.path_text).desired_width(f32::INFINITY),
                     );
                     if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
@@ -700,8 +702,10 @@ impl App {
                 ui.separator();
                 ui.horizontal(|ui| {
                     ui.label(self.t(Text::FileNameLabel));
-                    let r =
-                        ui.add(egui::TextEdit::singleline(&mut b.name_text).desired_width(300.0));
+                    let r = super::clipmenu::text_box(
+                        ui,
+                        egui::TextEdit::singleline(&mut b.name_text).desired_width(300.0),
+                    );
                     let enter = r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
                     let mut filter = b.filter;
                     egui::ComboBox::from_id_salt("filefilter")
@@ -892,21 +896,24 @@ impl App {
                                     .spacing([10.0, 6.0])
                                     .show(ui, |ui| {
                                         ui.label(self.t(Text::McServerAddress));
-                                        ui.add(
+                                        super::clipmenu::text_box(
+                                            ui,
                                             egui::TextEdit::singleline(&mut d.s.server_address)
                                                 .desired_width(260.0)
                                                 .hint_text("192.168.0.180:18200"),
                                         );
                                         ui.end_row();
                                         ui.label(self.t(Text::McServerToken));
-                                        ui.add(
+                                        super::clipmenu::text_box(
+                                            ui,
                                             egui::TextEdit::singleline(&mut d.s.server_token)
                                                 .desired_width(260.0)
                                                 .password(true),
                                         );
                                         ui.end_row();
                                         ui.label(self.t(Text::McServerMachine));
-                                        ui.add(
+                                        super::clipmenu::text_box(
+                                            ui,
                                             egui::TextEdit::singleline(&mut d.s.server_machine)
                                                 .desired_width(260.0),
                                         );

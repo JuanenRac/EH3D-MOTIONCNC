@@ -9,6 +9,9 @@ use crate::gcode::Modal;
 /// The jog steps offered, in mm.
 pub const STEPS: [f64; 5] = [0.01, 0.1, 1.0, 10.0, 100.0];
 
+/// The mark of a pause (in seconds) inside the lines that put the controller back in its state.
+const WAIT_MARK: &str = "@wait ";
+
 pub struct Session {
     pub controller: Box<dyn Controller>,
     pub status: Status,
@@ -25,6 +28,8 @@ pub struct Session {
     pub modal: Modal,
     /// The zero of the operator, apart from the work zero: a position of the machine the operator chose to measure from.
     pub operator_zero: [f64; AXES],
+    /// The lines that put the controller back in the state the program had reached; they go out when a program that was left in the middle is resumed.
+    pub resume_preamble: Vec<String>,
 }
 
 impl Session {
@@ -41,6 +46,7 @@ impl Session {
             feed_mm_min: 600.0,
             modal: Modal::default(),
             operator_zero: [0.0; AXES],
+            resume_preamble: Vec::new(),
         };
         s.refresh();
         s
@@ -236,12 +242,73 @@ impl Session {
     }
 
     /// Starts the program from its first line, or goes on if it was paused.
+    /// The lines that bring a controller back to the state of the program at line `next`: units and absolute distances, up to a safe Z, the spindle with
+    /// the time to reach its speed, the coolant, over the point the program had reached, and then the modal state of the program (inches, relative
+    /// distances, the feed and the way of moving).
+    pub fn preamble_for(&self, next: usize, safe_z_mm: f64, spindle_wait_s: f64) -> Vec<String> {
+        let m = &self.modal;
+        let mut out = vec![
+            "G21".to_string(),
+            "G90".to_string(),
+            format!("G0 Z{safe_z_mm}"),
+        ];
+        if m.spindle != 5 {
+            let speed = m.speed.map(|s| format!(" S{s}")).unwrap_or_default();
+            out.push(format!("M{}{}", m.spindle, speed));
+            if spindle_wait_s > 0.0 {
+                out.push(format!("{WAIT_MARK}{spindle_wait_s}"));
+            }
+        }
+        if m.coolant != 9 {
+            out.push(format!("M{}", m.coolant));
+        }
+        let path = crate::gcode::toolpath(&self.program[..next.min(self.program.len())]);
+        if let Some(last) = path.last() {
+            out.push(format!("G0 X{:.4} Y{:.4}", last.to.0, last.to.1));
+        }
+        if m.inches {
+            out.push("G20".to_string());
+        }
+        if !m.absolute {
+            out.push("G91".to_string());
+        }
+        if let Some(f) = m.feed {
+            out.push(format!("F{f}"));
+        }
+        if m.motion == 1 {
+            out.push("G1".to_string());
+        }
+        out
+    }
+
+    /// Like `resume_at`, and the controller is brought back to the state of the program when the operator resumes.
+    pub fn resume_at_safe(&mut self, next: usize, safe_z_mm: f64, spindle_wait_s: f64) {
+        self.resume_at(next);
+        self.resume_preamble = self.preamble_for(self.next, safe_z_mm, spindle_wait_s);
+    }
+
     pub fn start(&mut self) {
         if self.alarm() {
             self.say("start: the controller is in alarm");
             return;
         }
         if self.paused {
+            // after a failure the controller may have been reset: its state is put back before anything moves
+            let preamble = std::mem::take(&mut self.resume_preamble);
+            for line in &preamble {
+                // a wait is made here, not by the controller: a simulator or a controller that does not know G4 works the same
+                if let Some(seconds) = line.strip_prefix(WAIT_MARK) {
+                    if let Ok(s) = seconds.parse::<f64>() {
+                        std::thread::sleep(std::time::Duration::from_secs_f64(s.clamp(0.0, 120.0)));
+                    }
+                    continue;
+                }
+                if let Err(e) = self.controller.send_line(line) {
+                    self.failed(&format!("resume ({line})"), e);
+                    return;
+                }
+                self.modal.apply(line);
+            }
             self.order("resume", Command::Resume);
             self.paused = false;
             return;
@@ -339,6 +406,31 @@ mod tests {
 
     fn session() -> Session {
         Session::new(Box::new(SimController::new()))
+    }
+
+    #[test]
+    fn a_resumed_program_first_puts_the_controller_back_in_the_state_it_had() {
+        let mut s = session();
+        s.load("G21 G90\nM3 S12000\nM8\nG0 X5 Y6 Z2\nG1 Z-1 F150\nG1 X20 Y6\nG1 X30\n");
+        s.resume_at_safe(6, 4.0, 0.01);
+        let want = [
+            "G21",
+            "G90",
+            "G0 Z4",
+            "M3 S12000",
+            "@wait 0.01",
+            "M8",
+            "G0 X20.0000 Y6.0000",
+            "F150",
+            "G1",
+        ];
+        assert_eq!(s.resume_preamble, want);
+        // nothing goes out until the operator resumes; then the preamble goes first and only once
+        s.pump(10);
+        assert_eq!(s.next, 6);
+        s.start();
+        assert!(s.resume_preamble.is_empty() && !s.paused);
+        assert!(s.log.iter().all(|l| !l.contains("resume (")), "{:?}", s.log);
     }
 
     #[test]

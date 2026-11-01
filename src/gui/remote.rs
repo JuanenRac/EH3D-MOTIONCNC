@@ -199,6 +199,7 @@ impl App {
                     next: i.line,
                     total,
                     job: i.id.clone(),
+                    sha256: recovery::program_hash(&self.session.program),
                 };
                 if r.save(&path).is_ok() {
                     self.recovery_saved = Some(i.line);

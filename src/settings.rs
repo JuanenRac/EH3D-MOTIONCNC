@@ -37,6 +37,9 @@ pub struct Settings {
     pub server_machine: String,
     /// When a program goes on after a stop, also start the spindle and the coolant again as they were (off: the operator starts them).
     pub server_restore_outputs: bool,
+    /// When a program goes on after a failure: the Z (work coordinates) the head goes up to before it moves sideways, and the seconds the spindle gets to reach its speed.
+    pub resume_safe_z_mm: f64,
+    pub resume_spindle_wait_s: f64,
 }
 
 impl Default for Settings {
@@ -59,6 +62,8 @@ impl Default for Settings {
             server_token: String::new(),
             server_machine: String::new(),
             server_restore_outputs: false,
+            resume_safe_z_mm: 5.0,
+            resume_spindle_wait_s: 3.0,
         }
     }
 }
@@ -120,6 +125,16 @@ impl Settings {
                 "server_token" => s.server_token = v.to_string(),
                 "server_machine" => s.server_machine = v.to_string(),
                 "server_restore_outputs" => s.server_restore_outputs = on(v),
+                "resume_safe_z" => {
+                    s.resume_safe_z_mm = num(v)
+                        .filter(|x| (-500.0..=500.0).contains(x))
+                        .unwrap_or(s.resume_safe_z_mm)
+                }
+                "resume_spindle_wait" => {
+                    s.resume_spindle_wait_s = num(v)
+                        .filter(|x| (0.0..=120.0).contains(x))
+                        .unwrap_or(s.resume_spindle_wait_s)
+                }
                 "recent" => {
                     s.recent = v
                         .split('|')
@@ -148,7 +163,7 @@ impl Settings {
     pub fn to_text(&self) -> String {
         let t = &self.travel;
         format!(
-            "lang = {}\ntheme = {}\nunits = {}\nstep = {}\nfeed = {}\nspindle = {}\nshow_buttons = {}\nshow_program = {}\nshow_log = {}\nshow_rapids = {}\ntravel_x = {},{}\ntravel_y = {},{}\ntravel_z = {},{}\nlast_dir = {}\nrecent = {}\nserver_address = {}\nserver_token = {}\nserver_machine = {}\nserver_restore_outputs = {}\n",
+            "lang = {}\ntheme = {}\nunits = {}\nstep = {}\nfeed = {}\nspindle = {}\nshow_buttons = {}\nshow_program = {}\nshow_log = {}\nshow_rapids = {}\ntravel_x = {},{}\ntravel_y = {},{}\ntravel_z = {},{}\nlast_dir = {}\nrecent = {}\nserver_address = {}\nserver_token = {}\nserver_machine = {}\nserver_restore_outputs = {}\nresume_safe_z = {}\nresume_spindle_wait = {}\n",
             self.lang.code(),
             self.theme.key(),
             if self.inches { "in" } else { "mm" },
@@ -170,7 +185,9 @@ impl Settings {
             one_line(&self.server_address),
             one_line(&self.server_token),
             one_line(&self.server_machine),
-            yes(self.server_restore_outputs)
+            yes(self.server_restore_outputs),
+            self.resume_safe_z_mm,
+            self.resume_spindle_wait_s
         )
     }
 
@@ -241,6 +258,8 @@ mod tests {
             server_token: "a-token".into(),
             server_machine: "router".into(),
             server_restore_outputs: true,
+            resume_safe_z_mm: 7.5,
+            resume_spindle_wait_s: 4.0,
         };
         s.remember_recent("C:/jobs/a.nc");
         s.remember_recent("C:/jobs/b.nc");

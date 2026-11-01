@@ -235,6 +235,7 @@ impl App {
                     next: s.next,
                     total: s.program.len(),
                     job: String::new(),
+                    sha256: recovery::program_hash(&s.program),
                 };
                 if r.save(&path).is_ok() {
                     self.recovery_saved = Some(s.next);

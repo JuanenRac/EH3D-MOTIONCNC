@@ -393,14 +393,21 @@ impl App {
         match answer {
             Some(true) => {
                 self.open(Path::new(&r.file));
-                if self.session.program.len() == r.total && !r.job.is_empty() {
+                let same_program = self.session.program.len() == r.total
+                    && (r.sha256.is_empty()
+                        || r.sha256 == crate::recovery::program_hash(&self.session.program));
+                if same_program && !r.job.is_empty() {
                     // the program was sent to the server: its job is followed again, or made again from the line it reached; the server waits for the
                     // operator before the first move
                     self.recovery_saved = Some(r.next);
                     self.attach_to_server(r.job.clone(), r.next);
-                } else if self.session.program.len() == r.total {
-                    // it waits paused: the operator checks the machine and presses Resume
-                    self.session.resume_at(r.next);
+                } else if same_program {
+                    // it waits paused: the operator checks the machine and presses Resume; the controller is first brought back to the state of the program
+                    self.session.resume_at_safe(
+                        r.next,
+                        self.settings.resume_safe_z_mm,
+                        self.settings.resume_spindle_wait_s,
+                    );
                     self.recovery_saved = Some(r.next);
                 } else {
                     // the file is not the one that was running (it changed): nothing is safe to go on from

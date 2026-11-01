@@ -37,6 +37,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libgl1-mesa-dev
       - name: Rust toolchain
         run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }}
+      - name: Tests
+        run: cargo test --all-targets
+        working-directory: EH3D-MOTIONCNC
       - name: Build
         run: cargo build --release --features gui --target ${{ matrix.target }}
         working-directory: EH3D-MOTIONCNC

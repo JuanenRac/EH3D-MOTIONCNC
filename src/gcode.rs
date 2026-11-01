@@ -131,6 +131,9 @@ pub struct Modal {
     pub spindle: u8,
     /// `M7`, `M8` or `M9`.
     pub coolant: u8,
+    /// The last `F` and `S` words taken, when there was one.
+    pub feed: Option<f64>,
+    pub speed: Option<f64>,
 }
 
 impl Default for Modal {
@@ -141,6 +144,8 @@ impl Default for Modal {
             absolute: true,
             spindle: 5,
             coolant: 9,
+            feed: None,
+            speed: None,
         }
     }
 }
@@ -158,6 +163,8 @@ impl Modal {
                 ('G', _) if tenths == 210 => self.inches = false,
                 ('G', _) if tenths == 900 => self.absolute = true,
                 ('G', _) if tenths == 910 => self.absolute = false,
+                ('F', _) if v > 0.0 => self.feed = Some(v),
+                ('S', _) if v >= 0.0 => self.speed = Some(v),
                 ('M', n @ (3..=5)) => self.spindle = n as u8,
                 ('M', n @ (7..=9)) => self.coolant = n as u8,
                 ('M', 2 | 30) => {

@@ -14,16 +14,30 @@ pub struct Recovery {
     pub total: usize,
     /// The id of the job on the EH3D server when the program was sent to it (empty: the program ran on the controller of this computer).
     pub job: String,
+    /// The SHA-256 of the program (its lines joined by line breaks) when it was saved; empty in a file that an older version wrote.
+    pub sha256: String,
+}
+
+/// The SHA-256 of a program, as the recovery file keeps it.
+pub fn program_hash(lines: &[String]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    for line in lines {
+        h.update(line.as_bytes());
+        h.update(b"\n");
+    }
+    h.finalize().iter().map(|b| format!("{b:02x}")).collect()
 }
 
 impl Recovery {
     pub fn to_text(&self) -> String {
         format!(
-            "file={}\nnext={}\ntotal={}\njob={}\n",
+            "file={}\nnext={}\ntotal={}\njob={}\nsha256={}\n",
             self.file.replace(['\r', '\n'], " "),
             self.next,
             self.total,
-            self.job.replace(['\r', '\n'], " ")
+            self.job.replace(['\r', '\n'], " "),
+            self.sha256.replace(['\r', '\n'], " ")
         )
     }
 
@@ -43,6 +57,7 @@ impl Recovery {
                 "next" => r.next = v.trim().parse().ok()?,
                 "total" => r.total = v.trim().parse().ok()?,
                 "job" => r.job = v.trim().to_string(),
+                "sha256" => r.sha256 = v.trim().to_string(),
                 _ => {}
             }
         }
@@ -89,8 +104,22 @@ mod tests {
             next: 120,
             total: 400,
             job: "j1a2b3c4d".to_string(),
+            sha256: program_hash(&["G0 X1".to_string()]),
         };
         assert_eq!(Recovery::parse(&r.to_text()), Some(r));
+    }
+
+    #[test]
+    fn the_hash_tells_a_changed_program_from_the_same_one() {
+        let a = vec!["G0 X1".to_string(), "G1 Z-1".to_string()];
+        let mut b = a.clone();
+        assert_eq!(program_hash(&a), program_hash(&b));
+        assert_eq!(program_hash(&a).len(), 64);
+        b[1] = "G1 Z-2".to_string();
+        assert_ne!(program_hash(&a), program_hash(&b));
+        // a file written before the hash existed still reads, with no hash
+        let old = Recovery::parse("file=a.nc\nnext=1\ntotal=3\n").unwrap();
+        assert!(old.sha256.is_empty());
     }
 
     #[test]
@@ -109,6 +138,7 @@ mod tests {
             next: 5,
             total: 9,
             job: String::new(),
+            sha256: String::new(),
         };
         let back = Recovery::parse(&r.to_text()).unwrap();
         assert_eq!(back.next, 5);
@@ -127,6 +157,7 @@ mod tests {
             next: 3,
             total: 9,
             job: String::new(),
+            sha256: String::new(),
         };
         r.save(&p).unwrap();
         assert_eq!(Recovery::load(&p), Some(r));
